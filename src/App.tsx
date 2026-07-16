@@ -60,7 +60,7 @@ function App() {
             Definir estructura
           </TabButton>
           <TabButton active={activeTab === 'results'} onClick={() => setActiveTab('results')} disabled={!result}>
-            Resultados (8 pasos)
+            Resultados (7 pasos)
           </TabButton>
         </div>
 
@@ -103,11 +103,11 @@ function App() {
               <SummaryCard label="Estado" value="✓" detail="Sistema resuelto" accent />
             </div>
             <BeamDiagram model={model} />
-            <AnalysisSteps result={result} />
+            <AnalysisSteps result={result} model={model} />
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-[#d0d7e2] bg-white p-12 text-center text-[#5a6a7e]">
-            Define la estructura y presiona <strong className="text-[#0a2540]">Calcular</strong> para ver los 8 pasos del análisis.
+            Define la estructura y presiona <strong className="text-[#0a2540]">Calcular</strong> para ver los 7 pasos del análisis.
           </div>
         )}
       </main>
