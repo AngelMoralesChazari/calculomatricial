@@ -1,4 +1,4 @@
-import { formatNumber } from '../lib/matrix'
+import { formatNumber } from '../lib/matrix/format'
 
 interface MatrixDisplayProps {
   matrix: number[][]
