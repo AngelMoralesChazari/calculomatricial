@@ -2,6 +2,7 @@ import type { AnalysisResult } from '../types/structure'
 import { MatrixDisplay, VectorDisplay } from './MatrixDisplay'
 import { units } from '../data/units'
 import { analysisSteps } from '../data/analysisSteps'
+import { formatResult } from '../lib/formatResult'
 
 interface AnalysisStepsProps {
   result: AnalysisResult
@@ -59,7 +60,7 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
                   <div key={item.elementId} className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
                     <p className="mb-2 text-xs text-slate-400">Elemento {item.elementId}</p>
                     <p className="font-mono text-sm text-pink-300">
-                      [{format(item.forces[0])}, {format(item.forces[1])}] {units.moment}
+                      [{formatResult(item.forces[0])}, {formatResult(item.forces[1])}] {units.moment}
                     </p>
                   </div>
                 ))}
@@ -132,9 +133,9 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
                   {result.elementForces.map((item) => (
                     <tr key={item.elementId} className="border-b border-slate-800 font-mono text-slate-200">
                       <td className="p-2 text-cyan-400">E{item.elementId}</td>
-                      <td className="p-2">{format(item.momentI)}</td>
-                      <td className="p-2">{format(item.momentJ)}</td>
-                      <td className="p-2">{format(item.shear)}</td>
+                      <td className="p-2">{formatResult(item.momentI)}</td>
+                      <td className="p-2">{formatResult(item.momentJ)}</td>
+                      <td className="p-2">{formatResult(item.shear)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -145,9 +146,4 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
       ))}
     </div>
   )
-}
-
-function format(value: number) {
-  if (Math.abs(value) < 1e-10) return '0'
-  return value.toFixed(4)
 }
