@@ -16,10 +16,21 @@ export function analyzeStructure(model: StructureModel): AnalysisResult {
   const globalStiffness = createMatrix(n, n)
   const loadVector = Array(n).fill(0)
 
-  const elementStiffness = model.elements.map((element) => ({
-    elementId: element.id,
-    matrix: elementStiffnessMatrix(element.E, element.I, element.L),
-  }))
+  const elementStiffness = model.elements.map((element) => {
+    const dofI = model.nodes.findIndex((node) => node.id === element.nodeI)
+    const dofJ = model.nodes.findIndex((node) => node.id === element.nodeJ)
+    return {
+      elementId: element.id,
+      matrix: elementStiffnessMatrix(element.E, element.I, element.L),
+      nodeI: element.nodeI,
+      nodeJ: element.nodeJ,
+      dofI,
+      dofJ,
+      E: element.E,
+      I: element.I,
+      L: element.L,
+    }
+  })
 
   const fixedEndForces = model.elements.map((element) => ({
     elementId: element.id,
