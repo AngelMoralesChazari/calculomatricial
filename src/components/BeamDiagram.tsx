@@ -24,8 +24,8 @@ export function BeamDiagram({ model }: BeamDiagramProps) {
   const y = 80
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-slate-300">Idealización de la estructura</h3>
+    <div className="rounded-lg border border-[#d0d7e2] bg-white p-4">
+      <h3 className="mb-3 text-sm font-semibold text-[#0a2540]">Idealización de la estructura</h3>
       <svg viewBox={`0 0 ${maxX} 160`} className="h-40 w-full">
         {model.elements.map((element) => {
           const x1 = positions.get(element.nodeI) ?? 0
@@ -35,15 +35,22 @@ export function BeamDiagram({ model }: BeamDiagramProps) {
 
           return (
             <g key={element.id}>
-              <line x1={x1} y1={y} x2={x2} y2={y} stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
-              <text x={mid} y={y + 28} textAnchor="middle" fill="#94a3b8" fontSize="11">
+              <line x1={x1} y1={y} x2={x2} y2={y} stroke="#0a2540" strokeWidth="4" strokeLinecap="round" />
+              <text x={mid} y={y + 28} textAnchor="middle" fill="#5a6a7e" fontSize="11">
                 E{element.id} · L={element.L}m
               </text>
               {loads.map((load, index) => (
                 <g key={load.id}>
                   {load.type === 'udl' ? (
                     <>
-                      <line x1={x1 + 8} y1={y - 30 - index * 8} x2={x2 - 8} y2={y - 30 - index * 8} stroke="#f472b6" strokeWidth="1.5" />
+                      <line
+                        x1={x1 + 8}
+                        y1={y - 30 - index * 8}
+                        x2={x2 - 8}
+                        y2={y - 30 - index * 8}
+                        stroke="#3d5a80"
+                        strokeWidth="1.5"
+                      />
                       {Array.from({ length: 6 }).map((_, i) => {
                         const px = x1 + 8 + ((x2 - x1 - 16) * i) / 5
                         return (
@@ -53,12 +60,12 @@ export function BeamDiagram({ model }: BeamDiagramProps) {
                             y1={y - 30 - index * 8}
                             x2={px}
                             y2={y - 10 - index * 8}
-                            stroke="#f472b6"
+                            stroke="#3d5a80"
                             strokeWidth="1.5"
                           />
                         )
                       })}
-                      <text x={mid} y={y - 38 - index * 8} textAnchor="middle" fill="#f9a8d4" fontSize="10">
+                      <text x={mid} y={y - 38 - index * 8} textAnchor="middle" fill="#1a3a5c" fontSize="10">
                         w={load.value} kN/m
                       </text>
                     </>
@@ -69,18 +76,18 @@ export function BeamDiagram({ model }: BeamDiagramProps) {
                         y1={y - 35}
                         x2={x1 + (load.position ?? 0) * 30}
                         y2={y - 10}
-                        stroke="#fb7185"
+                        stroke="#1a3a5c"
                         strokeWidth="2"
                       />
                       <polygon
                         points={`${x1 + (load.position ?? 0) * 30},${y - 8} ${x1 + (load.position ?? 0) * 30 - 5},${y - 14} ${x1 + (load.position ?? 0) * 30 + 5},${y - 14}`}
-                        fill="#fb7185"
+                        fill="#1a3a5c"
                       />
                       <text
                         x={x1 + (load.position ?? 0) * 30}
                         y={y - 42}
                         textAnchor="middle"
-                        fill="#fda4af"
+                        fill="#1a3a5c"
                         fontSize="10"
                       >
                         P={load.value} kN
@@ -98,18 +105,18 @@ export function BeamDiagram({ model }: BeamDiagramProps) {
           return (
             <g key={node.id}>
               {node.restrained ? (
-                <polygon points={`${px},${y + 6} ${px - 10},${y + 22} ${px + 10},${y + 22}`} fill="#22d3ee" />
+                <polygon points={`${px},${y + 6} ${px - 10},${y + 22} ${px + 10},${y + 22}`} fill="#0a2540" />
               ) : (
-                <circle cx={px} cy={y} r="6" fill="#0ea5e9" stroke="#e2e8f0" strokeWidth="2" />
+                <circle cx={px} cy={y} r="6" fill="#ffffff" stroke="#0a2540" strokeWidth="2" />
               )}
-              <text x={px} y={y - 16} textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">
+              <text x={px} y={y - 16} textAnchor="middle" fill="#0a2540" fontSize="12" fontWeight="600">
                 N{node.label}
               </text>
             </g>
           )
         })}
       </svg>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-[#5a6a7e]">
         Triángulos = apoyos empotrados (rotación restringida). Círculos = nodos libres (θ desconocida).
       </p>
     </div>

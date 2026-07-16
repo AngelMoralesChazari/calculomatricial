@@ -46,7 +46,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#f4f6f9] text-[#0a2540]">
       <AppHeader
         onLoadDefault={() => loadExample(defaultStructure)}
         onLoadContinuous={() => loadExample(continuousBeamExample)}
@@ -55,7 +55,7 @@ function App() {
       />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex gap-2 rounded-xl border border-slate-700 bg-slate-800/50 p-1">
+        <div className="mb-6 flex gap-1 rounded-lg border border-[#d0d7e2] bg-white p-1">
           <TabButton active={activeTab === 'input'} onClick={() => setActiveTab('input')}>
             Definir estructura
           </TabButton>
@@ -65,13 +65,13 @@ function App() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="mb-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
           </div>
         )}
 
         {validationError && activeTab === 'input' && (
-          <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {validationError}
           </div>
         )}
@@ -106,15 +106,11 @@ function App() {
             <AnalysisSteps result={result} />
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-700 p-12 text-center text-slate-500">
-            Define la estructura y presiona <strong className="text-cyan-400">Calcular</strong> para ver los 8 pasos del análisis.
+          <div className="rounded-lg border border-dashed border-[#d0d7e2] bg-white p-12 text-center text-[#5a6a7e]">
+            Define la estructura y presiona <strong className="text-[#0a2540]">Calcular</strong> para ver los 8 pasos del análisis.
           </div>
         )}
       </main>
-
-      <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-600">
-        Calculomatricial — Método de rigidez matricial · React + Tailwind
-      </footer>
     </div>
   )
 }

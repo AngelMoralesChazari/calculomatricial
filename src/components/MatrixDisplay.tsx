@@ -18,9 +18,13 @@ export function MatrixDisplay({
   if (!matrix.length) return null
 
   return (
-    <div className={`overflow-x-auto rounded-xl border ${highlight ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-slate-700 bg-slate-900/60'}`}>
+    <div
+      className={`overflow-x-auto rounded-lg border ${
+        highlight ? 'border-[#0a2540] bg-[#e8eef5]' : 'border-[#d0d7e2] bg-white'
+      }`}
+    >
       {title && (
-        <div className="border-b border-slate-700 px-4 py-2 text-sm font-medium text-slate-300">
+        <div className="border-b border-[#d0d7e2] px-4 py-2 text-sm font-medium text-[#0a2540]">
           {title}
         </div>
       )}
@@ -29,7 +33,7 @@ export function MatrixDisplay({
           <tr>
             <th className="p-2" />
             {(colLabels ?? matrix[0].map((_, i) => `c${i + 1}`)).map((label) => (
-              <th key={label} className="p-2 text-center font-medium text-cyan-400">
+              <th key={label} className="p-2 text-center font-medium text-[#1a3a5c]">
                 {label}
               </th>
             ))}
@@ -37,12 +41,12 @@ export function MatrixDisplay({
         </thead>
         <tbody>
           {matrix.map((row, rowIndex) => (
-            <tr key={rowIndex} className="border-t border-slate-800">
-              <th className="p-2 text-left font-medium text-cyan-400">
+            <tr key={rowIndex} className="border-t border-[#e2e8f0]">
+              <th className="p-2 text-left font-medium text-[#1a3a5c]">
                 {rowLabels?.[rowIndex] ?? `f${rowIndex + 1}`}
               </th>
               {row.map((value, colIndex) => (
-                <td key={colIndex} className="p-2 text-center text-slate-200">
+                <td key={colIndex} className="p-2 text-center text-[#0a2540]">
                   {formatNumber(value)}
                 </td>
               ))}
@@ -63,9 +67,13 @@ interface VectorDisplayProps {
 
 export function VectorDisplay({ vector, labels, title, highlight = false }: VectorDisplayProps) {
   return (
-    <div className={`overflow-x-auto rounded-xl border ${highlight ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-slate-700 bg-slate-900/60'}`}>
+    <div
+      className={`overflow-x-auto rounded-lg border ${
+        highlight ? 'border-[#0a2540] bg-[#e8eef5]' : 'border-[#d0d7e2] bg-white'
+      }`}
+    >
       {title && (
-        <div className="border-b border-slate-700 px-4 py-2 text-sm font-medium text-slate-300">
+        <div className="border-b border-[#d0d7e2] px-4 py-2 text-sm font-medium text-[#0a2540]">
           {title}
         </div>
       )}
@@ -73,7 +81,7 @@ export function VectorDisplay({ vector, labels, title, highlight = false }: Vect
         <thead>
           <tr>
             {vector.map((_, index) => (
-              <th key={index} className="p-2 text-center font-medium text-cyan-400">
+              <th key={index} className="p-2 text-center font-medium text-[#1a3a5c]">
                 {labels?.[index] ?? `v${index + 1}`}
               </th>
             ))}
@@ -82,7 +90,7 @@ export function VectorDisplay({ vector, labels, title, highlight = false }: Vect
         <tbody>
           <tr>
             {vector.map((value, index) => (
-              <td key={index} className="p-2 text-center text-slate-200">
+              <td key={index} className="p-2 text-center text-[#0a2540]">
                 {formatNumber(value)}
               </td>
             ))}

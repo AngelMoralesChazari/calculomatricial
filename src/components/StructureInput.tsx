@@ -61,26 +61,29 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
   }
 
   const inputClass =
-    'w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500'
+    'w-full rounded-md border border-[#d0d7e2] bg-white px-3 py-2 text-sm text-[#0a2540] outline-none focus:border-[#0a2540] focus:ring-1 focus:ring-[#0a2540]'
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-700/80 bg-slate-800/40 p-5">
+      <section className="rounded-lg border border-[#d0d7e2] bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Nodos</h2>
+          <h2 className="text-lg font-semibold text-[#0a2540]">Nodos</h2>
           <button
             type="button"
             onClick={addNode}
-            className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-cyan-500"
+            className="rounded-md bg-[#0a2540] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#1a3a5c]"
           >
             + Nodo
           </button>
         </div>
         <div className="space-y-3">
           {model.nodes.map((node) => (
-            <div key={node.id} className="grid grid-cols-2 gap-3 rounded-xl border border-slate-700 bg-slate-900/50 p-3 sm:grid-cols-4">
+            <div
+              key={node.id}
+              className="grid grid-cols-2 gap-3 rounded-md border border-[#d0d7e2] bg-[#f4f6f9] p-3 sm:grid-cols-4"
+            >
               <div>
-                <label className="mb-1 block text-xs text-slate-400">Etiqueta</label>
+                <label className="mb-1 block text-xs text-[#5a6a7e]">Etiqueta</label>
                 <input
                   className={inputClass}
                   value={node.label}
@@ -88,12 +91,12 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                 />
               </div>
               <div className="flex items-end">
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-[#0a2540]">
                   <input
                     type="checkbox"
                     checked={node.restrained}
                     onChange={(e) => onChange(updateNode(model, node.id, { restrained: e.target.checked }))}
-                    className="rounded border-slate-600 bg-slate-900 text-cyan-500"
+                    className="rounded border-[#d0d7e2] text-[#0a2540]"
                   />
                   Apoyo fijo (θ=0)
                 </label>
@@ -103,24 +106,24 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-700/80 bg-slate-800/40 p-5">
+      <section className="rounded-lg border border-[#d0d7e2] bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Elementos (vigas)</h2>
+          <h2 className="text-lg font-semibold text-[#0a2540]">Elementos (vigas)</h2>
           <button
             type="button"
             onClick={addElement}
-            className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-cyan-500"
+            className="rounded-md bg-[#0a2540] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#1a3a5c]"
           >
             + Elemento
           </button>
         </div>
         <div className="space-y-3">
           {model.elements.map((element) => (
-            <div key={element.id} className="rounded-xl border border-slate-700 bg-slate-900/50 p-3">
-              <p className="mb-3 text-sm font-medium text-cyan-400">Elemento {element.id}</p>
+            <div key={element.id} className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] p-3">
+              <p className="mb-3 text-sm font-medium text-[#0a2540]">Elemento {element.id}</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">Nodo i</label>
+                  <label className="mb-1 block text-xs text-[#5a6a7e]">Nodo i</label>
                   <select
                     className={inputClass}
                     value={element.nodeI}
@@ -134,7 +137,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">Nodo j</label>
+                  <label className="mb-1 block text-xs text-[#5a6a7e]">Nodo j</label>
                   <select
                     className={inputClass}
                     value={element.nodeJ}
@@ -148,7 +151,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">E ({units.E})</label>
+                  <label className="mb-1 block text-xs text-[#5a6a7e]">E ({units.E})</label>
                   <input
                     type="number"
                     className={inputClass}
@@ -157,7 +160,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">I ({units.I})</label>
+                  <label className="mb-1 block text-xs text-[#5a6a7e]">I ({units.I})</label>
                   <input
                     type="number"
                     step="0.00001"
@@ -167,7 +170,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-400">L ({units.L})</label>
+                  <label className="mb-1 block text-xs text-[#5a6a7e]">L ({units.L})</label>
                   <input
                     type="number"
                     step="0.1"
@@ -182,20 +185,20 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-700/80 bg-slate-800/40 p-5">
+      <section className="rounded-lg border border-[#d0d7e2] bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Cargas en elementos</h2>
+          <h2 className="text-lg font-semibold text-[#0a2540]">Cargas en elementos</h2>
           <button
             type="button"
             onClick={addElementLoad}
-            className="rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-pink-500"
+            className="rounded-md bg-[#0a2540] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#1a3a5c]"
           >
             + Carga
           </button>
         </div>
         <div className="space-y-3">
           {model.elementLoads.length === 0 && (
-            <p className="text-sm text-slate-500">Sin cargas en elementos.</p>
+            <p className="text-sm text-[#5a6a7e]">Sin cargas en elementos.</p>
           )}
           {model.elementLoads.map((load) => (
             <ElementLoadRow key={load.id} model={model} load={load} onChange={onChange} inputClass={inputClass} />
@@ -203,15 +206,15 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-700/80 bg-slate-800/40 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Momentos nodales</h2>
+      <section className="rounded-lg border border-[#d0d7e2] bg-white p-5">
+        <h2 className="mb-4 text-lg font-semibold text-[#0a2540]">Momentos nodales</h2>
         <div className="space-y-3">
           {model.nodes.map((node) => {
             const existing = model.nodalLoads.find((l) => l.nodeId === node.id)
             const moment = existing?.moment ?? 0
             return (
               <div key={node.id} className="flex items-center gap-3">
-                <span className="w-16 text-sm text-slate-400">N{node.label}</span>
+                <span className="w-16 text-sm text-[#5a6a7e]">N{node.label}</span>
                 <input
                   type="number"
                   step="0.1"

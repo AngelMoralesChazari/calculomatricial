@@ -15,17 +15,14 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
   return (
     <div className="space-y-6">
       {analysisSteps.map((step, index) => (
-        <section
-          key={step.title}
-          className="rounded-2xl border border-slate-700/80 bg-slate-800/40 p-5 backdrop-blur-sm"
-        >
+        <section key={step.title} className="rounded-lg border border-[#d0d7e2] bg-white p-5">
           <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/20 text-sm font-bold text-cyan-400">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#0a2540] text-sm font-bold text-white">
               {index + 1}
             </span>
             <div>
-              <h3 className="text-base font-semibold text-white">{step.title}</h3>
-              <p className="mt-1 text-sm text-slate-400">{step.description}</p>
+              <h3 className="text-base font-semibold text-[#0a2540]">{step.title}</h3>
+              <p className="mt-1 text-sm text-[#5a6a7e]">{step.description}</p>
             </div>
           </div>
 
@@ -57,9 +54,9 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {result.fixedEndForces.map((item) => (
-                  <div key={item.elementId} className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
-                    <p className="mb-2 text-xs text-slate-400">Elemento {item.elementId}</p>
-                    <p className="font-mono text-sm text-pink-300">
+                  <div key={item.elementId} className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] p-3">
+                    <p className="mb-2 text-xs text-[#5a6a7e]">Elemento {item.elementId}</p>
+                    <p className="font-mono text-sm text-[#0a2540]">
                       [{formatResult(item.forces[0])}, {formatResult(item.forces[1])}] {units.moment}
                     </p>
                   </div>
@@ -113,7 +110,7 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
                   highlight
                 />
               ) : (
-                <p className="text-sm text-slate-400">No hay grados de libertad restringidos.</p>
+                <p className="text-sm text-[#5a6a7e]">No hay grados de libertad restringidos.</p>
               )}
             </div>
           )}
@@ -122,7 +119,7 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
             <div className="overflow-x-auto">
               <table className="w-full min-w-max text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700 text-left text-slate-400">
+                  <tr className="border-b border-[#d0d7e2] text-left text-[#5a6a7e]">
                     <th className="p-2">Elemento</th>
                     <th className="p-2">Mi ({units.moment})</th>
                     <th className="p-2">Mj ({units.moment})</th>
@@ -131,8 +128,8 @@ export function AnalysisSteps({ result }: AnalysisStepsProps) {
                 </thead>
                 <tbody>
                   {result.elementForces.map((item) => (
-                    <tr key={item.elementId} className="border-b border-slate-800 font-mono text-slate-200">
-                      <td className="p-2 text-cyan-400">E{item.elementId}</td>
+                    <tr key={item.elementId} className="border-b border-[#e2e8f0] font-mono text-[#0a2540]">
+                      <td className="p-2 font-semibold text-[#1a3a5c]">E{item.elementId}</td>
                       <td className="p-2">{formatResult(item.momentI)}</td>
                       <td className="p-2">{formatResult(item.momentJ)}</td>
                       <td className="p-2">{formatResult(item.shear)}</td>

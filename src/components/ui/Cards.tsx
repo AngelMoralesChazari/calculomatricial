@@ -14,10 +14,10 @@ export function TabButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+      className={`flex-1 rounded-md px-4 py-2.5 text-sm font-medium transition ${
         active
-          ? 'bg-cyan-500 text-slate-950'
-          : 'text-slate-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40'
+          ? 'bg-[#0a2540] text-white'
+          : 'text-[#5a6a7e] hover:bg-[#e8eef5] hover:text-[#0a2540] disabled:cursor-not-allowed disabled:opacity-40'
       }`}
     >
       {children}
@@ -38,13 +38,15 @@ export function SummaryCard({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${
-        accent ? 'border-cyan-500/40 bg-cyan-500/10' : 'border-slate-700 bg-slate-800/40'
+      className={`rounded-lg border p-4 ${
+        accent
+          ? 'border-[#0a2540] bg-[#0a2540] text-white'
+          : 'border-[#d0d7e2] bg-white text-[#0a2540]'
       }`}
     >
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
-      <p className="mt-1 truncate text-xs text-slate-500">{detail}</p>
+      <p className={`text-xs ${accent ? 'text-white/70' : 'text-[#5a6a7e]'}`}>{label}</p>
+      <p className="mt-1 text-2xl font-bold">{value}</p>
+      <p className={`mt-1 truncate text-xs ${accent ? 'text-white/60' : 'text-[#5a6a7e]'}`}>{detail}</p>
     </div>
   )
 }

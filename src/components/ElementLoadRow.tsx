@@ -21,10 +21,14 @@ export function ElementLoadRow({ model, load, onChange, inputClass }: ElementLoa
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-700 bg-slate-900/50 p-3 sm:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 rounded-md border border-[#d0d7e2] bg-[#f4f6f9] p-3 sm:grid-cols-5">
       <div>
-        <label className="mb-1 block text-xs text-slate-400">Elemento</label>
-        <select className={inputClass} value={load.elementId} onChange={(e) => update({ elementId: Number(e.target.value) })}>
+        <label className="mb-1 block text-xs text-[#5a6a7e]">Elemento</label>
+        <select
+          className={inputClass}
+          value={load.elementId}
+          onChange={(e) => update({ elementId: Number(e.target.value) })}
+        >
           {model.elements.map((element) => (
             <option key={element.id} value={element.id}>
               E{element.id}
@@ -33,7 +37,7 @@ export function ElementLoadRow({ model, load, onChange, inputClass }: ElementLoa
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-xs text-slate-400">Tipo</label>
+        <label className="mb-1 block text-xs text-[#5a6a7e]">Tipo</label>
         <select
           className={inputClass}
           value={load.type}
@@ -44,7 +48,7 @@ export function ElementLoadRow({ model, load, onChange, inputClass }: ElementLoa
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-xs text-slate-400">
+        <label className="mb-1 block text-xs text-[#5a6a7e]">
           Valor ({load.type === 'udl' ? units.udl : units.point})
         </label>
         <input
@@ -56,7 +60,7 @@ export function ElementLoadRow({ model, load, onChange, inputClass }: ElementLoa
       </div>
       {load.type === 'point' && (
         <div>
-          <label className="mb-1 block text-xs text-slate-400">Posición (m desde i)</label>
+          <label className="mb-1 block text-xs text-[#5a6a7e]">Posición (m desde i)</label>
           <input
             type="number"
             step="0.1"
@@ -67,7 +71,7 @@ export function ElementLoadRow({ model, load, onChange, inputClass }: ElementLoa
         </div>
       )}
       <div className="flex items-end">
-        <button type="button" onClick={remove} className="text-xs text-red-400 hover:text-red-300">
+        <button type="button" onClick={remove} className="text-xs text-red-700 hover:text-red-900">
           Eliminar
         </button>
       </div>
