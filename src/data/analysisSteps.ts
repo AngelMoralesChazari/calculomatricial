@@ -1,35 +1,36 @@
 export const analysisSteps = [
   {
-    title: '1. Idealización de la estructura',
+    title: 'Definición de datos de entrada',
     description:
-      'Se numeran nodos y elementos. Cada nodo tiene un grado de libertad rotacional (θ). Los apoyos empotrados restringen esa rotación.',
+      'Geometría, propiedades (E, I, L), conectividad de nodos y grados de libertad. Estos datos alimentan las matrices de rigidez locales.',
   },
   {
-    title: '2. Matrices de rigidez de cada elemento',
-    description: 'Para cada viga: k = (EI/L) · [[4, 2], [2, 4]]',
+    title: 'Matrices de rigidez locales de cada elemento',
+    description:
+      'Para cada viga se calcula ki = (EI/L)·[[4, 2], [2, 4]]. Cada fila/columna se mapea a los G.L. globales de sus nodos extremos.',
   },
   {
-    title: '3. Ensamblaje de la matriz de rigidez global',
-    description: 'Se superponen las contribuciones de cada elemento según sus nodos de conexión.',
+    title: 'Momentos de empotramiento perfecto (Fki)',
+    description:
+      'Fuerzas y momentos fijos en los extremos por cargas en la barra (p. ej. wL²/12). Se envían al vector de carga del sistema.',
   },
   {
-    title: '4. Matriz de cargas del sistema',
-    description: 'F = cargas nodales − fuerzas de empotramiento perfecto (FEMP).',
+    title: 'Vector de carga del sistema (Fk)',
+    description:
+      'Fk = cargas nodales − Fki. Es el lado derecho de F = K·D, solo en grados de libertad libres.',
   },
   {
-    title: '5. Inversión de la submatriz Kdd',
-    description: 'Se invierte la submatriz asociada a los grados de libertad libres.',
+    title: 'Ensamble de la matriz de rigidez del sistema (K₁₁) e inversa',
+    description:
+      'Se superponen las rigideces locales en una matriz N×N; se extrae K₁₁ (G.L. libres) y se calcula K₁₁⁻¹. Aquí nace la matriz global.',
   },
   {
-    title: '6. Desplazamientos nodales',
-    description: '[Dd] = [Kdd]⁻¹ · [Fd]',
+    title: 'Solución de desplazamientos y giros',
+    description: 'D = K₁₁⁻¹ · Fk. Se obtienen las rotaciones (rad) de los nodos libres.',
   },
   {
-    title: '7. Reacciones en apoyos',
-    description: '[FR] = [Krd] · [Dd] + [Frd]',
-  },
-  {
-    title: '8. Fuerzas internas en elementos',
-    description: '[Pi] = [ki] · [Di] + [Pemp] para cada elemento.',
+    title: 'Fuerzas internas y reacciones',
+    description:
+      'En cada elemento: Fi = ki·Di + Fki. Las reacciones en apoyos: FR = Krd·Dd + Frd.',
   },
 ] as const
