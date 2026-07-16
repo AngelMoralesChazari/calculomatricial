@@ -1,2 +1,1 @@
-export { analyzeStructure } from './analysis/analyze'
-export { validateStructure } from './analysis/validate'
+export { analyzeStructure, validateStructure } from './analysis/index'
