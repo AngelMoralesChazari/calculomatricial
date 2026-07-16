@@ -1,5 +1,5 @@
 import type { BeamElement, ElementLoad, StructNode, StructureModel } from '../types/structure'
-import { units } from '../data/examples'
+import { units } from '../data/units'
 
 interface StructureInputProps {
   model: StructureModel
