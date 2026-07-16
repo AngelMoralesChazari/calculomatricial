@@ -11,7 +11,17 @@ export interface AnalysisResult {
   dofLabels: string[]
   freeDofIndices: number[]
   restrainedDofIndices: number[]
-  elementStiffness: { elementId: number; matrix: number[][] }[]
+  elementStiffness: {
+    elementId: number
+    matrix: number[][]
+    nodeI: number
+    nodeJ: number
+    dofI: number
+    dofJ: number
+    E: number
+    I: number
+    L: number
+  }[]
   globalStiffness: number[][]
   loadVector: number[]
   partitioned: {
