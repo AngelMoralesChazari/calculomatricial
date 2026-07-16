@@ -1,0 +1,5 @@
+export type { Matrix } from './create'
+export { createMatrix, identity, cloneMatrix, addMatrices } from './create'
+export { multiplyMatrices, multiplyMatrixVector, transpose, extractSubmatrix } from './operations'
+export { invert } from './invert'
+export { formatNumber } from './format'
