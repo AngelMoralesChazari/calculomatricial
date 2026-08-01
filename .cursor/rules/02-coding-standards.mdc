@@ -1,0 +1,62 @@
+---
+description: Convenciones de código TypeScript/React del proyecto
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Coding standards
+
+## TypeScript
+
+- Strict tipado; `import type { … }` para tipos (`verbatimModuleSyntax`).
+- Preferir `interface` para modelos de dominio; `type` para uniones (`LoadType`, tabs).
+- Nombres de dominio claros: `StructNode` / `BeamElement` (evitar chocar con DOM `Node`/`Element`).
+- Matrices: `number[][]`. Vectores: `number[]`.
+- Exportar dominio vía barrels: `types/structure.ts`, `lib/structuralAnalysis.ts`, `lib/*/index.ts`.
+
+## Nombrado
+
+| Qué | Convención | Ejemplo |
+|-----|------------|---------|
+| Componentes | PascalCase archivo = componente | `AnalysisSteps.tsx` |
+| Funciones dominio | camelCase verbos | `analyzeStructure`, `elementStiffnessMatrix` |
+| Constantes datos | camelCase | `defaultStructure`, `analysisSteps` |
+| Props | `XxxProps` | `StructureInputProps` |
+
+## React / UI
+
+- Solo componentes funcionales.
+- Estado en `App`; hijos controlados por props (`model` / `onChange`, `result`).
+- Estilos: clases Tailwind. Palette: navy `#0a2540`, fondo `#f4f6f9`, bordes `#d0d7e2`. Sin degradados ni tema oscuro neón.
+- Matrices: usar `MatrixDisplay` / `VectorDisplay` (notación con corchetes), no tablas HTML para K/D/F.
+- Textos de UI y mensajes de error en **español**.
+
+## Estado y errores
+
+```ts
+// Validación previa: string | null
+const validationError = useMemo(() => validateStructure(model), [model])
+
+// Análisis: try/catch con Error.message
+try {
+  setResult(analyzeStructure(model))
+} catch (err) {
+  setError(err instanceof Error ? err.message : 'Error desconocido…')
+}
+```
+
+- `validateStructure` no lanza: retorna mensaje o `null`.
+- `analyzeStructure` / `invert` sí pueden `throw` (estructura inválida, matriz singular).
+
+## Lib de cálculo
+
+- Mantener `lib/` libre de React y de CSS.
+- Fórmulas de ingeniería en `stiffness/`; álgebra en `matrix/`; orquestación en `analysis/`.
+- No mutar el `StructureModel` de entrada; construir resultados nuevos.
+- Umbral numérico cercano a cero: `1e-10` / `1e-12` (como en `format` e `invert`).
+
+## Qué no hacer
+
+- No añadir dependencias de UI/estado sin necesidad.
+- No mezclar lógica de ensamble/inversión dentro de componentes.
+- No renombrar tipos de dominio a nombres DOM genéricos.
