@@ -77,13 +77,18 @@ function App() {
         )}
 
         {activeTab === 'input' ? (
-          <div className="grid gap-6 lg:grid-cols-5">
-            <div className="lg:col-span-3">
-              <StructureInput model={model} onChange={setModel} />
-            </div>
-            <div className="lg:col-span-2">
-              <BeamDiagram model={model} />
-              <UnitsPanel />
+          <div className="space-y-5">
+            <BeamDiagram model={model} />
+
+            <div className="grid gap-5 lg:grid-cols-12">
+              <div className="lg:col-span-9">
+                <StructureInput model={model} onChange={setModel} />
+              </div>
+              <aside className="lg:col-span-3">
+                <div className="lg:sticky lg:top-5">
+                  <UnitsPanel />
+                </div>
+              </aside>
             </div>
           </div>
         ) : result ? (
@@ -102,7 +107,7 @@ function App() {
               <SummaryCard label="Elementos" value={result.elementForces.length} detail="Vigas analizadas" />
               <SummaryCard label="Estado" value="✓" detail="Sistema resuelto" accent />
             </div>
-            <BeamDiagram model={model} />
+            <BeamDiagram model={model} scale={42} heightClass="h-52" />
             <AnalysisSteps result={result} model={model} />
           </div>
         ) : (
