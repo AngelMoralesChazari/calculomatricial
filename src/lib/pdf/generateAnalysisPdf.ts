@@ -4,19 +4,174 @@ import { units } from '../../data/units'
 import type { ReportAuthor } from '../../types/report'
 import type { AnalysisResult, StructureModel } from '../../types/structure'
 
-const NAVY: [number, number, number] = [10, 37, 64]
-const GRAY: [number, number, number] = [90, 106, 126]
-const LINE: [number, number, number] = [208, 215, 226]
-const BLACK: [number, number, number] = [20, 20, 20]
+type Rgb = [number, number, number]
+
+const NAVY: Rgb = [10, 37, 64]
+const GRAY: Rgb = [90, 106, 126]
+const LINE: Rgb = [208, 215, 226]
+const BLACK: Rgb = [20, 20, 20]
+const WHITE: Rgb = [255, 255, 255]
 
 const MARGIN = 14
 const PAGE_W = 210
 const PAGE_H = 297
 const CONTENT_W = PAGE_W - MARGIN * 2
 
+const THETA = 'θ'
+const PT_TO_MM = 25.4 / 72
+
+interface FontSpec {
+  font: string
+  style: string
+  size: number
+}
+
+const NAME_SPEC: FontSpec = { font: 'times', style: 'italic', size: 11 }
+const EQ_SPEC: FontSpec = { font: 'times', style: 'normal', size: 11 }
+const LABEL_SPEC: FontSpec = { font: 'helvetica', style: 'normal', size: 6.5 }
+const VALUE_SPEC: FontSpec = { font: 'courier', style: 'normal', size: 8 }
+
 interface PdfCursor {
   doc: jsPDF
   y: number
+}
+
+const SUPERSCRIPTS: Record<string, string> = {
+  '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5',
+  '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+',
+  '⁽': '(', '⁾': ')', 'ⁱ': 'i', 'ᵀ': 'T',
+}
+
+const SUBSCRIPTS: Record<string, string> = {
+  '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5',
+  '₆': '6', '₇': '7', '₈': '8', '₉': '9', '₋': '-', 'ᵢ': 'i', 'ⱼ': 'j',
+}
+
+const SUB_DIGITS = '₀₁₂₃₄₅₆₇₈₉'
+const SUP_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
+
+function subscript(value: number): string {
+  return String(value).replace(/\d/g, (digit) => SUB_DIGITS[Number(digit)])
+}
+
+function superscript(value: number): string {
+  return `⁽${String(value).replace(/\d/g, (digit) => SUP_DIGITS[Number(digit)])}⁾`
+}
+
+/** Sustituye glifos fuera de WinAnsi que las fuentes base de jsPDF no imprimen */
+function plain(text: string): string {
+  return text.replace(/−/g, '-').replace(/≈/g, '~')
+}
+
+type Token =
+  | { kind: 'text'; value: string }
+  | { kind: 'theta' }
+  | { kind: 'sup'; value: string }
+  | { kind: 'sub'; value: string }
+
+function tokenize(text: string): Token[] {
+  const tokens: Token[] = []
+  let buffer = ''
+  const flush = () => {
+    if (buffer) {
+      tokens.push({ kind: 'text', value: buffer })
+      buffer = ''
+    }
+  }
+
+  for (const char of text) {
+    const sup = SUPERSCRIPTS[char]
+    const sub = SUBSCRIPTS[char]
+    if (char === THETA) {
+      flush()
+      tokens.push({ kind: 'theta' })
+    } else if (sup) {
+      flush()
+      const last = tokens[tokens.length - 1]
+      if (last && last.kind === 'sup') last.value += sup
+      else tokens.push({ kind: 'sup', value: sup })
+    } else if (sub) {
+      flush()
+      const last = tokens[tokens.length - 1]
+      if (last && last.kind === 'sub') last.value += sub
+      else tokens.push({ kind: 'sub', value: sub })
+    } else {
+      buffer += char
+    }
+  }
+  flush()
+  return tokens
+}
+
+function applyFont(doc: jsPDF, spec: FontSpec) {
+  doc.setFont(spec.font, spec.style)
+  doc.setFontSize(spec.size)
+}
+
+function smallSpec(spec: FontSpec): FontSpec {
+  return { ...spec, size: spec.size * 0.68 }
+}
+
+/** θ se dibuja vectorialmente (elipse + barra): las fuentes base no incluyen griego */
+function thetaWidth(spec: FontSpec): number {
+  return spec.size * PT_TO_MM * 0.56
+}
+
+function drawTheta(doc: jsPDF, x: number, baseline: number, spec: FontSpec, color: Rgb) {
+  const mm = spec.size * PT_TO_MM
+  const h = mm * 0.78
+  const w = thetaWidth(spec) * 0.74
+  const cx = x + thetaWidth(spec) / 2
+  const cy = baseline - h / 2
+
+  doc.setDrawColor(...color)
+  doc.setLineWidth(Math.max(0.13, mm * 0.055))
+  doc.ellipse(cx, cy, w / 2, h / 2, 'S')
+  doc.line(cx - w / 2, cy, cx + w / 2, cy)
+}
+
+function tokenWidth(doc: jsPDF, token: Token, spec: FontSpec): number {
+  if (token.kind === 'theta') return thetaWidth(spec)
+  const tokenSpec = token.kind === 'text' ? spec : smallSpec(spec)
+  applyFont(doc, tokenSpec)
+  return doc.getTextWidth(token.value)
+}
+
+function measureText(doc: jsPDF, text: string, spec: FontSpec): number {
+  return tokenize(plain(text)).reduce((width, token) => width + tokenWidth(doc, token, spec), 0)
+}
+
+type Align = 'left' | 'center' | 'right'
+
+function drawText(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  baseline: number,
+  spec: FontSpec,
+  color: Rgb = BLACK,
+  align: Align = 'left',
+): number {
+  const tokens = tokenize(plain(text))
+  const total = tokens.reduce((width, token) => width + tokenWidth(doc, token, spec), 0)
+  let cursorX = align === 'left' ? x : align === 'center' ? x - total / 2 : x - total
+  const mm = spec.size * PT_TO_MM
+
+  for (const token of tokens) {
+    if (token.kind === 'theta') {
+      drawTheta(doc, cursorX, baseline, spec, color)
+      cursorX += thetaWidth(spec)
+      continue
+    }
+    const tokenSpec = token.kind === 'text' ? spec : smallSpec(spec)
+    const offsetY = token.kind === 'sup' ? -mm * 0.34 : token.kind === 'sub' ? mm * 0.18 : 0
+    applyFont(doc, tokenSpec)
+    doc.setTextColor(...color)
+    doc.text(token.value, cursorX, baseline + offsetY)
+    cursorX += doc.getTextWidth(token.value)
+  }
+
+  return total
 }
 
 function ensureSpace(ctx: PdfCursor, needed: number) {
@@ -27,11 +182,9 @@ function ensureSpace(ctx: PdfCursor, needed: number) {
 }
 
 function sectionTitle(ctx: PdfCursor, title: string) {
-  ensureSpace(ctx, 12)
-  ctx.doc.setFont('helvetica', 'bold')
-  ctx.doc.setFontSize(10)
-  ctx.doc.setTextColor(...NAVY)
-  ctx.doc.text(title, MARGIN, ctx.y)
+  ensureSpace(ctx, 16)
+  ctx.y += 2.5
+  drawText(ctx.doc, title, MARGIN, ctx.y, { font: 'helvetica', style: 'bold', size: 9.5 }, NAVY)
   ctx.y += 2
   ctx.doc.setDrawColor(...NAVY)
   ctx.doc.setLineWidth(0.4)
@@ -39,46 +192,30 @@ function sectionTitle(ctx: PdfCursor, title: string) {
   ctx.y += 6
 }
 
-function label(ctx: PdfCursor, text: string) {
+function caption(ctx: PdfCursor, text: string) {
   ensureSpace(ctx, 6)
-  ctx.doc.setFont('helvetica', 'bold')
-  ctx.doc.setFontSize(8)
-  ctx.doc.setTextColor(...NAVY)
-  ctx.doc.text(text, MARGIN, ctx.y)
+  drawText(ctx.doc, text, MARGIN, ctx.y, { font: 'helvetica', style: 'bold', size: 8 }, NAVY)
   ctx.y += 4.5
 }
 
-function drawTable(
-  ctx: PdfCursor,
-  headers: string[],
-  rows: string[][],
-  colWidths?: number[],
-) {
-  const cols = headers.length
-  const widths =
-    colWidths ??
-    Array.from({ length: cols }, () => CONTENT_W / cols)
-  const rowH = 6
+function drawTable(ctx: PdfCursor, headers: string[], rows: string[][], colWidths?: number[]) {
+  const widths = colWidths ?? Array.from({ length: headers.length }, () => CONTENT_W / headers.length)
   const headerH = 6.5
+  const rowH = 6
 
-  ensureSpace(ctx, headerH + rows.length * rowH + 4)
+  ensureSpace(ctx, headerH + rowH * Math.min(rows.length, 3) + 4)
 
-  let x = MARGIN
-  ctx.doc.setFillColor(10, 37, 64)
+  ctx.doc.setFillColor(...NAVY)
   ctx.doc.rect(MARGIN, ctx.y, CONTENT_W, headerH, 'F')
-  ctx.doc.setFont('helvetica', 'bold')
-  ctx.doc.setFontSize(7)
-  ctx.doc.setTextColor(255, 255, 255)
-  headers.forEach((h, i) => {
-    ctx.doc.text(h, x + 1.5, ctx.y + 4.2)
-    x += widths[i]
+  let hx = MARGIN
+  headers.forEach((header, i) => {
+    drawText(ctx.doc, header, hx + 1.8, ctx.y + 4.3, { font: 'helvetica', style: 'bold', size: 7 }, WHITE)
+    hx += widths[i]
   })
   ctx.y += headerH
 
-  ctx.doc.setFont('courier', 'normal')
-  ctx.doc.setFontSize(7)
   rows.forEach((row, rowIndex) => {
-    ensureSpace(ctx, rowH + 2)
+    ensureSpace(ctx, rowH)
     if (rowIndex % 2 === 0) {
       ctx.doc.setFillColor(244, 246, 249)
       ctx.doc.rect(MARGIN, ctx.y, CONTENT_W, rowH, 'F')
@@ -88,98 +225,120 @@ function drawTable(
     ctx.doc.rect(MARGIN, ctx.y, CONTENT_W, rowH, 'S')
 
     let cx = MARGIN
-    ctx.doc.setTextColor(...BLACK)
     row.forEach((cell, i) => {
-      ctx.doc.text(cell, cx + 1.5, ctx.y + 4)
+      drawText(ctx.doc, cell, cx + 1.8, ctx.y + 4.1, { font: 'courier', style: 'normal', size: 7.5 }, BLACK)
       cx += widths[i]
     })
     ctx.y += rowH
   })
-  ctx.y += 5
+  ctx.y += 4
 }
 
-function drawMatrix(
-  ctx: PdfCursor,
-  name: string,
-  matrix: number[][],
-  rowLabels?: string[],
-  colLabels?: string[],
-) {
-  if (!matrix.length) return
+interface MatrixOptions {
+  rowLabels?: string[]
+  colLabels?: string[]
+  note?: string
+}
 
+/**
+ * Notación matemática: `nombre = [ … ]` con corchetes altos,
+ * etiquetas de G.L. dentro y valores alineados a la derecha.
+ */
+function drawMatrix(ctx: PdfCursor, name: string, matrix: number[][], options: MatrixOptions = {}) {
+  if (!matrix.length || !matrix[0].length) return
+
+  const { doc } = ctx
+  const { rowLabels, colLabels, note } = options
   const cols = matrix[0].length
-  const cellW = Math.min(22, (CONTENT_W - 28) / Math.max(cols, 1))
-  const cellH = 5.5
-  const labelW = rowLabels ? 16 : 0
-  const matrixW = labelW + cols * cellW
-  const topLabels = colLabels ? cellH : 0
-  const totalH = 8 + topLabels + matrix.length * cellH + 4
+  const rowH = 5.4
+  const padY = 2
+  const padX = 2.6
+
+  const nameW = measureText(doc, name, NAME_SPEC)
+  const eqW = measureText(doc, ' = ', EQ_SPEC)
+  const labelW = rowLabels ? 11 : 0
+
+  const bracketX = MARGIN + nameW + eqW + 2
+  const available = PAGE_W - MARGIN - bracketX - labelW - padX * 2 - 4
+
+  // Ajusta decimales y tamaño de fuente hasta que la matriz entre en el ancho útil
+  const decimals = cols > 5 ? 3 : 4
+  const cells = matrix.map((row) => row.map((value) => formatNumber(value, decimals)))
+  let valueSpec = VALUE_SPEC
+  let cellW = 0
+  for (let size = VALUE_SPEC.size; size >= 5.5; size -= 0.5) {
+    valueSpec = { ...VALUE_SPEC, size }
+    const widest = Math.max(...cells.flat().map((cell) => measureText(doc, cell, valueSpec)))
+    cellW = widest + 3.5
+    if (cols * cellW <= available) break
+  }
+  cellW = Math.min(cellW, available / cols)
+
+  const innerW = labelW + cols * cellW
+  const innerH = matrix.length * rowH
+  const bracketH = innerH + padY * 2
+  const totalH = (colLabels ? 4.2 : 0) + bracketH + (note ? 4.2 : 0) + 5
 
   ensureSpace(ctx, totalH)
 
-  ctx.doc.setFont('helvetica', 'bold')
-  ctx.doc.setFontSize(8)
-  ctx.doc.setTextColor(...NAVY)
-  ctx.doc.text(name, MARGIN, ctx.y)
-  ctx.y += 4
+  const contentX = bracketX + padX
+  let top = ctx.y
 
-  const startX = MARGIN + 4
-  let y = ctx.y
-
-  if (colLabels) {
-    colLabels.forEach((lab, i) => {
-      ctx.doc.setFont('helvetica', 'normal')
-      ctx.doc.setFontSize(6)
-      ctx.doc.setTextColor(...GRAY)
-      ctx.doc.text(lab, startX + labelW + i * cellW + cellW / 2, y + 3.5, { align: 'center' })
-    })
-    y += cellH
+  if (note) {
+    drawText(doc, note, MARGIN, top, { font: 'helvetica', style: 'normal', size: 7 }, GRAY)
+    top += 4.2
   }
 
-  const matrixTop = y
-  const matrixH = matrix.length * cellH
-
-  // Corchetes
-  ctx.doc.setDrawColor(...NAVY)
-  ctx.doc.setLineWidth(0.6)
-  ctx.doc.line(startX - 1.5, matrixTop, startX - 1.5, matrixTop + matrixH)
-  ctx.doc.line(startX - 1.5, matrixTop, startX + 1, matrixTop)
-  ctx.doc.line(startX - 1.5, matrixTop + matrixH, startX + 1, matrixTop + matrixH)
-  ctx.doc.line(startX + matrixW + 1.5, matrixTop, startX + matrixW + 1.5, matrixTop + matrixH)
-  ctx.doc.line(startX + matrixW - 1, matrixTop, startX + matrixW + 1.5, matrixTop)
-  ctx.doc.line(startX + matrixW - 1, matrixTop + matrixH, startX + matrixW + 1.5, matrixTop + matrixH)
-
-  matrix.forEach((row, r) => {
-    if (rowLabels) {
-      ctx.doc.setFont('helvetica', 'normal')
-      ctx.doc.setFontSize(6)
-      ctx.doc.setTextColor(...GRAY)
-      ctx.doc.text(rowLabels[r] ?? '', startX + labelW - 1.5, y + cellH * 0.7, { align: 'right' })
-    }
-    row.forEach((value, c) => {
-      ctx.doc.setFont('courier', 'normal')
-      ctx.doc.setFontSize(7)
-      ctx.doc.setTextColor(...BLACK)
-      ctx.doc.text(
-        formatNumber(value),
-        startX + labelW + c * cellW + cellW / 2,
-        y + cellH * 0.7,
-        { align: 'center' },
-      )
+  if (colLabels) {
+    colLabels.forEach((label, i) => {
+      drawText(doc, label, contentX + labelW + i * cellW + cellW / 2, top + 2.8, LABEL_SPEC, GRAY, 'center')
     })
-    y += cellH
+    top += 4.2
+  }
+
+  const bracketTop = top
+  const bracketBottom = top + bracketH
+  const serif = 2.2
+
+  doc.setDrawColor(...NAVY)
+  doc.setLineWidth(0.7)
+  // corchete izquierdo
+  doc.line(bracketX, bracketTop, bracketX, bracketBottom)
+  doc.line(bracketX, bracketTop, bracketX + serif, bracketTop)
+  doc.line(bracketX, bracketBottom, bracketX + serif, bracketBottom)
+  // corchete derecho
+  const rightX = contentX + innerW + padX
+  doc.line(rightX, bracketTop, rightX, bracketBottom)
+  doc.line(rightX - serif, bracketTop, rightX, bracketTop)
+  doc.line(rightX - serif, bracketBottom, rightX, bracketBottom)
+
+  // nombre = (centrado verticalmente respecto al corchete)
+  const nameBaseline = bracketTop + bracketH / 2 + NAME_SPEC.size * PT_TO_MM * 0.35
+  drawText(doc, name, MARGIN, nameBaseline, NAME_SPEC, NAVY)
+  drawText(doc, ' = ', MARGIN + nameW, nameBaseline, EQ_SPEC, NAVY)
+
+  cells.forEach((rowCells, r) => {
+    const baseline = bracketTop + padY + r * rowH + rowH * 0.68
+
+    if (rowLabels) {
+      drawText(doc, rowLabels[r] ?? '', contentX + labelW - 2.5, baseline, LABEL_SPEC, GRAY, 'right')
+    }
+
+    rowCells.forEach((cell, c) => {
+      drawText(doc, cell, contentX + labelW + (c + 1) * cellW - 1.5, baseline, valueSpec, BLACK, 'right')
+    })
   })
 
-  ctx.y = y + 5
+  ctx.y = bracketBottom + 5
 }
 
-function drawVector(
-  ctx: PdfCursor,
-  name: string,
-  vector: number[][],
-  labels?: string[],
-) {
-  drawMatrix(ctx, name, vector, labels)
+function drawVector(ctx: PdfCursor, name: string, values: number[], labels?: string[], note?: string) {
+  drawMatrix(
+    ctx,
+    name,
+    values.map((value) => [value]),
+    { rowLabels: labels, note },
+  )
 }
 
 function footer(doc: jsPDF, author: ReportAuthor) {
@@ -189,20 +348,24 @@ function footer(doc: jsPDF, author: ReportAuthor) {
     doc.setDrawColor(...LINE)
     doc.setLineWidth(0.3)
     doc.line(MARGIN, PAGE_H - 12, PAGE_W - MARGIN, PAGE_H - 12)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(7)
-    doc.setTextColor(...GRAY)
-    const left = `${author.title} ${author.name}`.trim()
-    doc.text(left, MARGIN, PAGE_H - 7)
-    doc.text(`p. ${i}/${pages}`, PAGE_W - MARGIN, PAGE_H - 7, { align: 'right' })
+    drawText(
+      doc,
+      `${author.title} ${author.name}`.trim(),
+      MARGIN,
+      PAGE_H - 7,
+      { font: 'helvetica', style: 'normal', size: 7 },
+      GRAY,
+    )
+    drawText(
+      doc,
+      `p. ${i}/${pages}`,
+      PAGE_W - MARGIN,
+      PAGE_H - 7,
+      { font: 'helvetica', style: 'normal', size: 7 },
+      GRAY,
+      'right',
+    )
   }
-}
-
-function authorLine(author: ReportAuthor): string {
-  const career = author.career.trim()
-  return career
-    ? `${author.title} ${author.name.trim()} — ${career}`
-    : `${author.title} ${author.name.trim()}`
 }
 
 export function generateAnalysisPdf(
@@ -214,44 +377,47 @@ export function generateAnalysisPdf(
   const ctx: PdfCursor = { doc, y: MARGIN }
   const freeLabels = result.freeDofIndices.map((i) => result.dofLabels[i])
   const restrainedLabels = result.restrainedDofIndices.map((i) => result.dofLabels[i])
-  const date = new Date().toLocaleDateString('es-MX', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const date = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
 
-  // Portada / encabezado
   doc.setFillColor(...NAVY)
   doc.rect(0, 0, PAGE_W, 28, 'F')
-  doc.setTextColor(255, 255, 255)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(14)
-  doc.text('ANÁLISIS ESTRUCTURAL — MÉTODO DE RIGIDEZ', MARGIN, 12)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
-  doc.text('Viga Euler-Bernoulli · G.L. rotacional (θ)', MARGIN, 19)
-  doc.text(date, PAGE_W - MARGIN, 19, { align: 'right' })
+  drawText(doc, 'ANÁLISIS ESTRUCTURAL — MÉTODO DE RIGIDEZ', MARGIN, 12, {
+    font: 'helvetica',
+    style: 'bold',
+    size: 13,
+  }, WHITE)
+  drawText(doc, 'Viga Euler-Bernoulli · 1 G.L. rotacional (θ) por nodo', MARGIN, 19, {
+    font: 'helvetica',
+    style: 'normal',
+    size: 8.5,
+  }, WHITE)
+  drawText(doc, date, PAGE_W - MARGIN, 19, { font: 'helvetica', style: 'normal', size: 8.5 }, WHITE, 'right')
 
   ctx.y = 36
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(...NAVY)
-  doc.text(authorLine(author), MARGIN, ctx.y)
+  const career = author.career.trim()
+  drawText(
+    doc,
+    career ? `${author.title} ${author.name.trim()} — ${career}` : `${author.title} ${author.name.trim()}`,
+    MARGIN,
+    ctx.y,
+    { font: 'helvetica', style: 'bold', size: 10 },
+    NAVY,
+  )
   ctx.y += 5
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7.5)
-  doc.setTextColor(...GRAY)
-  doc.text(
+  drawText(
+    doc,
     `Unidades: E [${units.E}] · I [${units.I}] · L [${units.L}] · M [${units.moment}] · V [${units.shear}] · θ [${units.rotation}] · w [${units.udl}] · P [${units.point}]`,
     MARGIN,
     ctx.y,
+    { font: 'helvetica', style: 'normal', size: 7.5 },
+    GRAY,
   )
   ctx.y += 8
 
   // 1. Datos de entrada
   sectionTitle(ctx, '1. DATOS DE ENTRADA')
 
-  label(ctx, 'Nodos')
+  caption(ctx, 'Nodos')
   drawTable(
     ctx,
     ['ID', 'Etiqueta', 'Apoyo (θ=0)', 'G.L.'],
@@ -264,7 +430,7 @@ export function generateAnalysisPdf(
     [20, 40, 50, CONTENT_W - 110],
   )
 
-  label(ctx, 'Elementos')
+  caption(ctx, 'Elementos')
   drawTable(
     ctx,
     ['Elem.', 'Ni', 'Nj', `E (${units.E})`, `I (${units.I})`, `L (${units.L})`],
@@ -276,92 +442,110 @@ export function generateAnalysisPdf(
     [22, 22, 22, 40, 40, CONTENT_W - 146],
   )
 
-  label(ctx, 'Cargas en elementos')
-  if (model.elementLoads.length === 0) {
-    ensureSpace(ctx, 6)
-    doc.setFont('courier', 'normal')
-    doc.setFontSize(8)
-    doc.setTextColor(...BLACK)
-    doc.text('—', MARGIN, ctx.y)
-    ctx.y += 6
-  } else {
-    drawTable(
-      ctx,
-      ['ID', 'Elem.', 'Tipo', 'Valor', 'Posición (m)'],
-      model.elementLoads.map((load) => [
-        String(load.id),
-        String(load.elementId),
-        load.type === 'udl' ? 'w' : 'P',
-        String(load.value),
-        load.type === 'point' ? String(load.position ?? '—') : '—',
-      ]),
-      [22, 28, 28, 40, CONTENT_W - 118],
-    )
-  }
+  caption(ctx, 'Cargas en elementos')
+  drawTable(
+    ctx,
+    ['ID', 'Elem.', 'Tipo', 'Valor', 'Posición (m)'],
+    model.elementLoads.length === 0
+      ? [['—', '—', '—', '—', '—']]
+      : model.elementLoads.map((load) => [
+          String(load.id),
+          `E${load.elementId}`,
+          load.type === 'udl' ? `w (${units.udl})` : `P (${units.point})`,
+          String(load.value),
+          load.type === 'point' ? String(load.position ?? '—') : '—',
+        ]),
+    [20, 26, 42, 40, CONTENT_W - 128],
+  )
 
-  label(ctx, `Momentos nodales (${units.moment})`)
-  const nodalRows =
+  caption(ctx, `Momentos nodales (${units.moment})`)
+  drawTable(
+    ctx,
+    ['Nodo', 'M'],
     model.nodalLoads.length === 0
       ? [['—', '0']]
       : model.nodalLoads.map((load) => {
-          const labelNode = model.nodes.find((n) => n.id === load.nodeId)?.label ?? String(load.nodeId)
-          return [`N${labelNode}`, formatNumber(load.moment)]
-        })
-  drawTable(ctx, ['Nodo', 'M'], nodalRows, [60, CONTENT_W - 60])
+          const nodeLabel = model.nodes.find((n) => n.id === load.nodeId)?.label ?? String(load.nodeId)
+          return [`N${nodeLabel}`, formatNumber(load.moment)]
+        }),
+    [60, CONTENT_W - 60],
+  )
 
   // 2. Matrices locales
-  sectionTitle(ctx, '2. MATRICES DE RIGIDEZ LOCALES  ki = (EI/L)·[[4,2],[2,4]]')
+  sectionTitle(ctx, '2. MATRICES DE RIGIDEZ LOCALES')
   for (const item of result.elementStiffness) {
     const li = result.dofLabels[item.dofI]
     const lj = result.dofLabels[item.dofJ]
-    label(ctx, `k${item.elementId} · E${item.elementId} · [${li}, ${lj}] · EI/L = ${formatNumber((item.E * item.I) / item.L)}`)
-    drawMatrix(ctx, `k${item.elementId} =`, item.matrix, [li, lj], [li, lj])
+    drawMatrix(ctx, `k${subscript(item.elementId)}`, item.matrix, {
+      rowLabels: [li, lj],
+      colLabels: [li, lj],
+      note: `E${item.elementId} · L = ${item.L} ${units.L} · EI/L = ${formatNumber((item.E * item.I) / item.L)}`,
+    })
   }
 
   // 3. Fki
-  sectionTitle(ctx, '3. FUERZAS DE EMPOTRAMIENTO  Fki')
+  sectionTitle(ctx, '3. FUERZAS DE EMPOTRAMIENTO')
   for (const item of result.fixedEndForces) {
     const el = result.elementStiffness.find((e) => e.elementId === item.elementId)
     const li = el ? result.dofLabels[el.dofI] : 'θi'
     const lj = el ? result.dofLabels[el.dofJ] : 'θj'
-    drawVector(ctx, `Fki(${item.elementId}) =`, [[item.forces[0]], [item.forces[1]]], [li, lj])
+    drawVector(
+      ctx,
+      `Fki${superscript(item.elementId)}`,
+      [item.forces[0], item.forces[1]],
+      [li, lj],
+      `Empotramiento perfecto · E${item.elementId} · [${units.moment}]`,
+    )
   }
 
-  // 4. Fk
-  sectionTitle(ctx, '4. VECTOR DE CARGA  Fk = Fnodal − Fki')
-  drawVector(
-    ctx,
-    'Fk =',
-    result.loadVector.map((v) => [v]),
-    result.dofLabels,
-  )
-  drawVector(
-    ctx,
-    'Fk (libres) =',
-    result.partitioned.Fd.map((v) => [v]),
-    freeLabels,
-  )
+  // 4. Vector de carga
+  sectionTitle(ctx, '4. VECTOR DE CARGA')
+  drawVector(ctx, 'Fk', result.loadVector, result.dofLabels, `Fk = Fnodal − Fki · [${units.moment}]`)
+  drawVector(ctx, 'Fd', result.partitioned.Fd, freeLabels, `G.L. libres · [${units.moment}]`)
 
   // 5. Ensamble
-  sectionTitle(ctx, '5. ENSAMBLE  KTG · K11 · K11⁻¹')
-  drawMatrix(ctx, 'KTG =', result.globalStiffness, result.dofLabels, result.dofLabels)
-  drawMatrix(ctx, 'K11 =', result.partitioned.Kdd, freeLabels, freeLabels)
-  drawMatrix(ctx, 'K11⁻¹ =', result.KddInverse, freeLabels, freeLabels)
+  sectionTitle(ctx, '5. ENSAMBLE DE LA MATRIZ DE RIGIDEZ')
+  drawMatrix(ctx, 'KTG', result.globalStiffness, {
+    rowLabels: result.dofLabels,
+    colLabels: result.dofLabels,
+    note: 'Matriz global ensamblada (N×N)',
+  })
+  drawMatrix(ctx, 'K₁₁', result.partitioned.Kdd, {
+    rowLabels: freeLabels,
+    colLabels: freeLabels,
+    note: 'K₁₁ = Kdd (G.L. libres)',
+  })
+  drawMatrix(ctx, 'K₁₁⁻¹', result.KddInverse, {
+    rowLabels: freeLabels,
+    colLabels: freeLabels,
+    note: 'Inversa de K₁₁',
+  })
   if (result.partitioned.Krd.length > 0) {
-    drawMatrix(ctx, 'Krd =', result.partitioned.Krd, restrainedLabels, freeLabels)
+    drawMatrix(ctx, 'Krd', result.partitioned.Krd, {
+      rowLabels: restrainedLabels,
+      colLabels: freeLabels,
+    })
   }
 
   // 6. Desplazamientos
-  sectionTitle(ctx, '6. DESPLAZAMIENTOS  D = K11⁻¹ · Fk')
-  drawVector(
-    ctx,
-    'D =',
-    result.freeDisplacements.map((v) => [v]),
-    freeLabels,
-  )
+  sectionTitle(ctx, '6. DESPLAZAMIENTOS')
+  drawVector(ctx, 'D', result.freeDisplacements, freeLabels, `D = K₁₁⁻¹ · Fd · [${units.rotation}]`)
 
   // 7. Fuerzas internas y reacciones
-  sectionTitle(ctx, '7. FUERZAS INTERNAS Y REACCIONES  Fi = ki·Di + Fki')
+  sectionTitle(ctx, '7. FUERZAS INTERNAS Y REACCIONES')
+  for (const force of result.elementForces) {
+    const el = result.elementStiffness.find((e) => e.elementId === force.elementId)
+    const li = el ? result.dofLabels[el.dofI] : 'θi'
+    const lj = el ? result.dofLabels[el.dofJ] : 'θj'
+    drawVector(
+      ctx,
+      `Fi${superscript(force.elementId)}`,
+      [force.momentI, force.momentJ],
+      [`M(${li})`, `M(${lj})`],
+      `Fi = ki · Di + Fki · V = ${formatNumber(force.shear)} ${units.shear} · [${units.moment}]`,
+    )
+  }
+
   drawTable(
     ctx,
     ['Elem.', `Mi (${units.moment})`, `Mj (${units.moment})`, `V (${units.shear})`],
@@ -374,21 +558,8 @@ export function generateAnalysisPdf(
     [30, 50, 50, CONTENT_W - 130],
   )
 
-  for (const f of result.elementForces) {
-    const el = result.elementStiffness.find((e) => e.elementId === f.elementId)
-    const li = el ? result.dofLabels[el.dofI] : 'θi'
-    const lj = el ? result.dofLabels[el.dofJ] : 'θj'
-    drawVector(ctx, `F${f.elementId} =`, [[f.momentI], [f.momentJ]], [`M(${li})`, `M(${lj})`])
-  }
-
   if (result.reactions.length > 0) {
-    label(ctx, 'FR = Krd · D + Frd')
-    drawVector(
-      ctx,
-      'FR =',
-      result.reactions.map((v) => [v]),
-      restrainedLabels,
-    )
+    drawVector(ctx, 'FR', result.reactions, restrainedLabels, `FR = Krd · D + Frd  ·  [${units.moment}]`)
   }
 
   footer(doc, author)
