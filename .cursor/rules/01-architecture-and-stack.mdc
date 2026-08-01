@@ -1,0 +1,67 @@
+---
+description: Arquitectura, stack y flujo de datos de Calculomatricial
+alwaysApply: true
+---
+
+# Arquitectura y stack
+
+## Stack detectado (solo lo instalado)
+
+| Capa | Tecnología | Notas |
+|------|------------|--------|
+| UI | React 19 + TypeScript | SPA, sin router |
+| Build | Vite 8 | `vite.config.ts` + `@vitejs/plugin-react` |
+| Estilos | Tailwind CSS 4 | vía `@tailwindcss/vite`, tokens en `src/index.css` |
+| Lint | oxlint | script `npm run lint` |
+| Deploy | Vercel | `vercel.json` → build `npm run build`, output `dist` |
+| Backend / BD | **No existe** | Todo el cálculo corre en el cliente |
+
+No introducir Next.js, Redux, React Router, Axios, ni ORMs sin decisión explícita: no están en el proyecto.
+
+## Patrón arquitectónico
+
+**SPA + dominio puro (lib) + UI presentacional.**
+
+```
+Usuario → App (estado) → validateStructure / analyzeStructure (lib)
+                       → Components (solo render + callbacks)
+```
+
+- `src/lib/`: lógica de ingeniería y álgebra lineal (sin React).
+- `src/components/`: UI; reciben `model` / `result` por props.
+- `src/types/`: contratos TypeScript (`model.ts`, `results.ts`, barrel `structure.ts`).
+- `src/data/`: ejemplos, unidades y textos de los 7 pasos.
+
+## Estructura de carpetas
+
+```
+src/
+  App.tsx                 # Orquestación: estado, tabs, cálculo
+  main.tsx                # Entry React
+  index.css               # Tailwind + palette navy/blanco
+  components/             # UI (AnalysisSteps, StructureInput, MatrixDisplay, …)
+  components/ui/          # Piezas UI genéricas (Cards)
+  lib/
+    analysis/             # analyzeStructure, validateStructure
+    matrix/               # create, operations, invert, format
+    stiffness/            # ki elemental + Fki (FEMP)
+  types/                  # StructureModel, AnalysisResult
+  data/                   # examples, units, analysisSteps
+```
+
+## Flujo de datos
+
+1. `StructureModel` en `useState` (nodos, elementos, cargas).
+2. `validateStructure(model)` → `string | null` (errores de entrada).
+3. `analyzeStructure(model)` → `AnalysisResult` (matrices, D, reacciones, fuerzas).
+4. UI de resultados: 7 pasos (`AnalysisSteps` + notación matricial en `MatrixDisplay`).
+
+Estado: local con `useState` / `useMemo`. Sin Context, stores ni persistencia.
+
+## Modelo estructural actual
+
+Viga Euler-Bernoulli con **1 G.L. rotacional (θ) por nodo**.
+
+- Rigidez local: `k = (EI/L) · [[4,2],[2,4]]`
+- No hay pórticos 2D, axiales ni armaduras en el código actual.
+- Unidades canónicas: E MPa, I m⁴, L m, cargas kN/kN·m, rotaciones rad (`src/data/units.ts`).
