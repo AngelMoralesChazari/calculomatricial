@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { AnalysisSteps } from './components/AnalysisSteps'
 import { AppHeader } from './components/AppHeader'
 import { BeamDiagram } from './components/BeamDiagram'
+import { DownloadReport } from './components/DownloadReport'
 import { StructureInput } from './components/StructureInput'
 import { UnitsPanel } from './components/UnitsPanel'
 import { SummaryCard, TabButton } from './components/ui/Cards'
@@ -108,6 +109,7 @@ function App() {
               <SummaryCard label="Estado" value="✓" detail="Sistema resuelto" accent />
             </div>
             <BeamDiagram model={model} scale={42} heightClass="h-52" />
+            <DownloadReport model={model} result={result} />
             <AnalysisSteps result={result} model={model} />
           </div>
         ) : (
