@@ -1,0 +1,45 @@
+# Calculomatricial — reglas globales para agentes y desarrolladores
+
+Proyecto: calculadora web de **análisis estructural por método de rigidez matricial** (vigas, G.L. rotacional θ). SPA React + TypeScript + Vite + Tailwind. Sin backend ni base de datos.
+
+## Antes de cambiar código
+
+1. Leer `docs/PROJECT_CONTEXT.md` y `.cursor/rules/01-architecture-and-stack.mdc`.
+2. Respetar la separación: **cálculo en `src/lib/`**, **UI en `src/components/`**, **tipos en `src/types/`**.
+3. No asumir librerías que no estén en `package.json`.
+
+## Nunca modificar / nunca commitear
+
+- `node_modules/`, `dist/`, `dist-ssr/`
+- Archivos `*.local`, logs (`*.log`, `npm-debug.log*`)
+- Secretos: `.env`, `.env.*`, credenciales, claves API (aunque hoy no hay backend)
+- Configuración local de editor: `.idea/`, la mayoría de `.vscode/` (salvo excepciones del `.gitignore`)
+- No tocar `.git/` ni reescribir historial salvo petición explícita del usuario
+
+## Convenciones rápidas
+
+- Idioma de UI y mensajes: **español**
+- Visual: navy `#0a2540` + blanco/`#f4f6f9`; sin degradados
+- Matrices en resultados: componente `MatrixDisplay` / `VectorDisplay` (notación matemática)
+- Flujo de resultados: **7 pasos** definidos en `src/data/analysisSteps.ts`
+- Entrada pública del motor: `analyzeStructure` + `validateStructure` desde `src/lib/structuralAnalysis.ts`
+- Commits solo si el usuario lo pide; mensajes concisos en español o estilo del repo
+
+## Formato de respuesta esperado del agente
+
+- Responder en **español**, directo y conciso.
+- Explicar el “por qué” de cambios de arquitectura o de fórmulas.
+- Citar código con el formato `startLine:endLine:filepath`.
+- No inventar pórticos 2D, axiales o BD: el alcance actual es **viga a flexión (θ)**.
+- Si se amplía el modelo estructural, actualizar tipos, `lib/stiffness`, validación y los 7 pasos juntos.
+- Tras cambios relevantes, verificar con `npm run build`.
+
+## Scripts útiles
+
+```bash
+npm install
+npm run dev      # desarrollo
+npm run build    # tsc -b && vite build
+npm run lint     # oxlint
+npm run preview  # preview del build
+```
