@@ -240,6 +240,28 @@ interface MatrixOptions {
   note?: string
 }
 
+/** Corchete como un solo trazo continuo (esquinas unidas, sin dobles) */
+function drawBracket(doc: jsPDF, x: number, top: number, height: number, side: 'left' | 'right') {
+  const serif = 2.4
+  const dx = side === 'left' ? serif : -serif
+
+  doc.setDrawColor(...NAVY)
+  doc.setLineWidth(0.32)
+  doc.setLineJoin('miter')
+  doc.setLineCap('butt')
+  doc.lines(
+    [
+      [-dx, 0],
+      [0, height],
+      [dx, 0],
+    ],
+    x + dx,
+    top,
+    [1, 1],
+    'S',
+  )
+}
+
 /**
  * Notación matemática: `nombre = [ … ]` con corchetes altos,
  * etiquetas de G.L. dentro y valores alineados a la derecha.
@@ -298,19 +320,9 @@ function drawMatrix(ctx: PdfCursor, name: string, matrix: number[][], options: M
 
   const bracketTop = top
   const bracketBottom = top + bracketH
-  const serif = 2.2
-
-  doc.setDrawColor(...NAVY)
-  doc.setLineWidth(0.7)
-  // corchete izquierdo
-  doc.line(bracketX, bracketTop, bracketX, bracketBottom)
-  doc.line(bracketX, bracketTop, bracketX + serif, bracketTop)
-  doc.line(bracketX, bracketBottom, bracketX + serif, bracketBottom)
-  // corchete derecho
   const rightX = contentX + innerW + padX
-  doc.line(rightX, bracketTop, rightX, bracketBottom)
-  doc.line(rightX - serif, bracketTop, rightX, bracketTop)
-  doc.line(rightX - serif, bracketBottom, rightX, bracketBottom)
+  drawBracket(doc, bracketX, bracketTop, bracketH, 'left')
+  drawBracket(doc, rightX, bracketTop, bracketH, 'right')
 
   // nombre = (centrado verticalmente respecto al corchete)
   const nameBaseline = bracketTop + bracketH / 2 + NAME_SPEC.size * PT_TO_MM * 0.35
