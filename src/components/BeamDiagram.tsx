@@ -144,15 +144,15 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
 
             return (
               <g key={node.id}>
-                {/* Articulación circular para apoyos que no sean empotrados */}
-                {support !== 'fixed' && (
+                {/* Articulación circular para apoyos que no sean empotrados ni deslizantes */}
+                {support !== 'fixed' && support !== 'slider' && (
                   <circle
                     cx={px}
                     cy={y}
-                    r={support === 'none' ? '7.5' : '5'}
+                    r={support === 'hinge' ? '7.5' : '4.5'}
                     fill="#ffffff"
                     stroke={NAVY}
-                    strokeWidth={support === 'none' ? '2.5' : '2'}
+                    strokeWidth={support === 'hinge' ? '3' : '2'}
                   />
                 )}
 
@@ -183,7 +183,7 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
                 {/* Símbolo de Apoyo Fijo (Articulado) */}
                 {support === 'pinned' && (
                   <g>
-                    <polygon points={`${px},${y + 5} ${px - 13},${y + 27} ${px + 13},${y + 27}`} fill={NAVY} />
+                    <polygon points={`${px},${y + 4.5} ${px - 13},${y + 27} ${px + 13},${y + 27}`} fill={NAVY} />
                     <line x1={px - 17} y1={y + 27} x2={px + 17} y2={y + 27} stroke={NAVY} strokeWidth="2" />
                     {Array.from({ length: 5 }).map((_, i) => {
                       const hx = px - 14 + i * 7
@@ -205,17 +205,66 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
                 {/* Símbolo de Apoyo Móvil (Rodillo) */}
                 {support === 'roller' && (
                   <g>
-                    <circle cx={px} cy={y + 12.5} r="7.5" fill="#ffffff" stroke={NAVY} strokeWidth="2.5" />
-                    <line x1={px - 15} y1={y + 20} x2={px + 15} y2={y + 20} stroke={NAVY} strokeWidth="2" />
+                    {/* Triángulo */}
+                    <polygon points={`${px},${y + 4.5} ${px - 13},${y + 20} ${px + 13},${y + 20}`} fill={NAVY} />
+                    {/* Tres ruedas */}
+                    <circle cx={px - 8} cy={y + 23} r="2.5" fill="#ffffff" stroke={NAVY} strokeWidth="1.5" />
+                    <circle cx={px} cy={y + 23} r="2.5" fill="#ffffff" stroke={NAVY} strokeWidth="1.5" />
+                    <circle cx={px + 8} cy={y + 23} r="2.5" fill="#ffffff" stroke={NAVY} strokeWidth="1.5" />
+                    {/* Línea inferior fija */}
+                    <line x1={px - 17} y1={y + 26} x2={px + 17} y2={y + 26} stroke={NAVY} strokeWidth="2" />
+                  </g>
+                )}
+
+                {/* Símbolo de Apoyo Deslizante (Guía) */}
+                {support === 'slider' && (
+                  <g>
+                    {/* Placa unida al nodo */}
+                    <rect x={px - 12} y={y - 8} width="24" height="16" fill={NAVY} rx="1" />
+                    <circle cx={px} cy={y} r="3" fill="#ffffff" />
+                    {/* Rodillos */}
+                    <circle cx={px - 7} cy={y + 12.5} r="2" fill="#ffffff" stroke={NAVY} strokeWidth="1.5" />
+                    <circle cx={px + 7} cy={y + 12.5} r="2" fill="#ffffff" stroke={NAVY} strokeWidth="1.5" />
+                    {/* Placa inferior fija */}
+                    <line x1={px - 15} y1={y + 16} x2={px + 15} y2={y + 16} stroke={NAVY} strokeWidth="2" />
+                    {/* Achurado fijo */}
                     {Array.from({ length: 5 }).map((_, i) => {
                       const hx = px - 12 + i * 6
                       return (
                         <line
                           key={i}
                           x1={hx}
-                          y1={y + 20}
+                          y1={y + 16}
                           x2={hx - 4}
-                          y2={y + 27}
+                          y2={y + 23}
+                          stroke={NAVY_MUTED}
+                          strokeWidth="1.5"
+                        />
+                      )
+                    })}
+                  </g>
+                )}
+
+                {/* Símbolo de Apoyo Elástico (Resorte) */}
+                {support === 'spring' && (
+                  <g>
+                    <path
+                      d={`M ${px} ${y + 4.5} L ${px + 6} ${y + 9} L ${px - 6} ${y + 13.5} L ${px + 6} ${y + 18} L ${px - 6} ${y + 22.5} L ${px} ${y + 27}`}
+                      fill="none"
+                      stroke={NAVY}
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <line x1={px - 12} y1={y + 27} x2={px + 12} y2={y + 27} stroke={NAVY} strokeWidth="2" />
+                    {Array.from({ length: 4 }).map((_, i) => {
+                      const hx = px - 9 + i * 6
+                      return (
+                        <line
+                          key={i}
+                          x1={hx}
+                          y1={y + 27}
+                          x2={hx - 3}
+                          y2={y + 33}
                           stroke={NAVY_MUTED}
                           strokeWidth="1.5"
                         />
@@ -236,17 +285,20 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#5a6a7e]">
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
-            <circle cx="8" cy="4" r="3.5" fill="#fff" stroke={NAVY} strokeWidth="1.5" />
-            <line x1="1" y1="9" x2="15" y2="9" stroke={NAVY} strokeWidth="1.5" />
+            <polygon points="8,1 3,7 13,7" fill={NAVY} />
+            <circle cx="5.5" cy="9.5" r="1" fill="#fff" stroke={NAVY} strokeWidth="0.8" />
+            <circle cx="8" cy="9.5" r="1" fill="#fff" stroke={NAVY} strokeWidth="0.8" />
+            <circle cx="10.5" cy="9.5" r="1" fill="#fff" stroke={NAVY} strokeWidth="0.8" />
+            <line x1="1" y1="11" x2="15" y2="11" stroke={NAVY} strokeWidth="1" />
           </svg>
-          Apoyo móvil / Rodillo
+          Apoyo móvil o rodillo
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
             <polygon points="8,1 2,9 14,9" fill={NAVY} />
             <line x1="0" y1="9" x2="16" y2="9" stroke={NAVY} strokeWidth="1.5" />
           </svg>
-          Apoyo fijo / Articulado
+          Apoyo fijo o articulado
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
@@ -256,6 +308,28 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
             <line x1="5" y1="10" x2="1" y2="8" stroke={NAVY_MUTED} strokeWidth="1" />
           </svg>
           Empotramiento
+        </span>
+        <span className="flex items-center gap-2">
+          <svg width="16" height="12" className="overflow-visible" aria-hidden>
+            <rect x="2" y="1" width="12" height="3" fill={NAVY} />
+            <circle cx="5" cy="6.5" r="1.5" fill="#fff" stroke={NAVY} strokeWidth="1" />
+            <circle cx="11" cy="6.5" r="1.5" fill="#fff" stroke={NAVY} strokeWidth="1" />
+            <line x1="0" y1="9" x2="16" y2="9" stroke={NAVY} strokeWidth="1.5" />
+          </svg>
+          Apoyo deslizante o guía
+        </span>
+        <span className="flex items-center gap-2">
+          <svg width="16" height="12" className="overflow-visible" aria-hidden>
+            <circle cx="8" cy="6" r="4.5" fill="#fff" stroke={NAVY} strokeWidth="2" />
+          </svg>
+          Rótula interna o articulación intermedia
+        </span>
+        <span className="flex items-center gap-2">
+          <svg width="16" height="12" className="overflow-visible" aria-hidden>
+            <path d="M 8,0 L 11,3 L 5,6 L 11,9 L 8,11" fill="none" stroke={NAVY} strokeWidth="1.5" />
+            <line x1="2" y1="11" x2="14" y2="11" stroke={NAVY} strokeWidth="1.5" />
+          </svg>
+          Apoyo elástico o resorte
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" aria-hidden>
