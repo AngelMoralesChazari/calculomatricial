@@ -101,16 +101,46 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                     const val = e.target.value as SupportType
                     onChange(updateNode(model, node.id, {
                       supportType: val,
-                      restrained: val === 'fixed'
+                      restrained: val === 'fixed' || val === 'slider'
                     }))
                   }}
-                  className="ml-auto rounded border border-[#d0d7e2] bg-white px-1 py-0.5 text-[11px] text-[#0a2540] outline-none focus:border-[#0a2540]"
+                  className="ml-auto min-w-0 flex-1 rounded border border-[#d0d7e2] bg-white px-1 py-0.5 text-[11px] text-[#0a2540] outline-none focus:border-[#0a2540]"
                 >
-                  <option value="none">Libre</option>
-                  <option value="roller">Rodillo (Móvil)</option>
-                  <option value="pinned">Articulado (Fijo)</option>
-                  <option value="fixed">Empotrado</option>
+                  <option value="none">Libre (Conexión)</option>
+                  <option value="roller">Apoyo móvil o rodillo</option>
+                  <option value="pinned">Apoyo fijo o articulado</option>
+                  <option value="fixed">Empotramiento</option>
+                  <option value="slider">Apoyo deslizante o guía</option>
+                  <option value="hinge">Rótula interna o articulación intermedia</option>
+                  <option value="spring">Apoyo elástico o resorte</option>
                 </select>
+                {model.nodes.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const deletedElementIds = model.elements
+                        .filter((el) => el.nodeI === node.id || el.nodeJ === node.id)
+                        .map((el) => el.id)
+                      const updatedModel = {
+                        ...model,
+                        nodes: model.nodes.filter((n) => n.id !== node.id),
+                        elements: model.elements.filter((el) => el.nodeI !== node.id && el.nodeJ !== node.id),
+                        elementLoads: model.elementLoads.filter((load) => !deletedElementIds.includes(load.elementId)),
+                        nodalLoads: model.nodalLoads.filter((load) => load.nodeId !== node.id),
+                      }
+                      onChange(updatedModel)
+                    }}
+                    className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition flex-shrink-0"
+                    title="Eliminar nodo"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>
