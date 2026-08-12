@@ -2,9 +2,9 @@ import type { StructureModel } from '../types/structure'
 
 export const defaultStructure: StructureModel = {
   nodes: [
-    { id: 1, label: '1', restrained: true },
-    { id: 2, label: '2', restrained: false },
-    { id: 3, label: '3', restrained: true },
+    { id: 1, label: '1', restrained: false, supportType: 'pinned' },
+    { id: 2, label: '2', restrained: false, supportType: 'none' },
+    { id: 3, label: '3', restrained: false, supportType: 'pinned' },
   ],
   elements: [
     { id: 1, nodeI: 1, nodeJ: 2, E: 210000, I: 0.0001, L: 4 },

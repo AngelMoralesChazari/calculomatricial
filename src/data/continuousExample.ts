@@ -2,10 +2,10 @@ import type { StructureModel } from '../types/structure'
 
 export const continuousBeamExample: StructureModel = {
   nodes: [
-    { id: 1, label: 'A', restrained: true },
-    { id: 2, label: 'B', restrained: false },
-    { id: 3, label: 'C', restrained: false },
-    { id: 4, label: 'D', restrained: true },
+    { id: 1, label: 'A', restrained: true, supportType: 'fixed' },
+    { id: 2, label: 'B', restrained: false, supportType: 'none' },
+    { id: 3, label: 'C', restrained: false, supportType: 'none' },
+    { id: 4, label: 'D', restrained: true, supportType: 'fixed' },
   ],
   elements: [
     { id: 1, nodeI: 1, nodeJ: 2, E: 210000, I: 0.00015, L: 5 },

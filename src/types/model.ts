@@ -1,7 +1,10 @@
+export type SupportType = 'none' | 'roller' | 'pinned' | 'fixed'
+
 export interface StructNode {
   id: number
   label: string
   restrained: boolean
+  supportType?: SupportType
 }
 
 export interface BeamElement {

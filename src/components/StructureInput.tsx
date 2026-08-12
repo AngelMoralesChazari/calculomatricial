@@ -1,4 +1,4 @@
-import type { BeamElement, StructNode, StructureModel } from '../types/structure'
+import type { BeamElement, StructNode, StructureModel, SupportType } from '../types/structure'
 import { units } from '../data/units'
 import { ElementLoadRow } from './ElementLoadRow'
 
@@ -31,7 +31,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
     const nextId = Math.max(0, ...model.nodes.map((n) => n.id)) + 1
     onChange({
       ...model,
-      nodes: [...model.nodes, { id: nextId, label: String(nextId), restrained: false }],
+      nodes: [...model.nodes, { id: nextId, label: String(nextId), restrained: false, supportType: 'none' }],
     })
   }
 
@@ -41,7 +41,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
     const newNodeId = Math.max(0, ...model.nodes.map((n) => n.id)) + 1
     onChange({
       ...model,
-      nodes: [...model.nodes, { id: newNodeId, label: String(newNodeId), restrained: false }],
+      nodes: [...model.nodes, { id: newNodeId, label: String(newNodeId), restrained: false, supportType: 'none' }],
       elements: [
         ...model.elements,
         {
@@ -94,15 +94,23 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                   value={node.label}
                   onChange={(e) => onChange(updateNode(model, node.id, { label: e.target.value }))}
                 />
-                <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[11px] text-[#0a2540]">
-                  <input
-                    type="checkbox"
-                    checked={node.restrained}
-                    onChange={(e) => onChange(updateNode(model, node.id, { restrained: e.target.checked }))}
-                    className="h-3.5 w-3.5 rounded border-[#d0d7e2] text-[#0a2540]"
-                  />
-                  Apoyo θ=0
-                </label>
+                <select
+                  aria-label={`Tipo de apoyo del nodo ${node.label}`}
+                  value={node.supportType ?? (node.restrained ? 'fixed' : 'none')}
+                  onChange={(e) => {
+                    const val = e.target.value as SupportType
+                    onChange(updateNode(model, node.id, {
+                      supportType: val,
+                      restrained: val === 'fixed'
+                    }))
+                  }}
+                  className="ml-auto rounded border border-[#d0d7e2] bg-white px-1 py-0.5 text-[11px] text-[#0a2540] outline-none focus:border-[#0a2540]"
+                >
+                  <option value="none">Libre</option>
+                  <option value="roller">Rodillo (Móvil)</option>
+                  <option value="pinned">Articulado (Fijo)</option>
+                  <option value="fixed">Empotrado</option>
+                </select>
               </div>
             ))}
           </div>

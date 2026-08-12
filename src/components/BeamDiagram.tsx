@@ -1,4 +1,4 @@
-import type { StructureModel } from '../types/structure'
+import type { StructureModel, SupportType } from '../types/structure'
 import { units } from '../data/units'
 
 interface BeamDiagramProps {
@@ -140,10 +140,49 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
 
           {model.nodes.map((node) => {
             const px = positions.get(node.id) ?? 0
+            const support = (node.supportType ?? (node.restrained ? 'fixed' : 'none')) as SupportType
+
             return (
               <g key={node.id}>
-                {node.restrained ? (
-                  <>
+                {/* Articulación circular para apoyos que no sean empotrados */}
+                {support !== 'fixed' && (
+                  <circle
+                    cx={px}
+                    cy={y}
+                    r={support === 'none' ? '7.5' : '5'}
+                    fill="#ffffff"
+                    stroke={NAVY}
+                    strokeWidth={support === 'none' ? '2.5' : '2'}
+                  />
+                )}
+
+                {/* Símbolo de Empotramiento */}
+                {support === 'fixed' && (
+                  <g>
+                    <line x1={px} y1={y - 20} x2={px} y2={y + 20} stroke={NAVY} strokeWidth="3.5" />
+                    {Array.from({ length: 7 }).map((_, i) => {
+                      const hy = y - 18 + i * 6
+                      const allPx = Array.from(positions.values())
+                      const maxPx = Math.max(...allPx)
+                      const isLeft = px !== maxPx
+                      return (
+                        <line
+                          key={i}
+                          x1={px}
+                          y1={hy}
+                          x2={isLeft ? px - 7 : px + 7}
+                          y2={hy - 6}
+                          stroke={NAVY_MUTED}
+                          strokeWidth="1.5"
+                        />
+                      )
+                    })}
+                  </g>
+                )}
+
+                {/* Símbolo de Apoyo Fijo (Articulado) */}
+                {support === 'pinned' && (
+                  <g>
                     <polygon points={`${px},${y + 5} ${px - 13},${y + 27} ${px + 13},${y + 27}`} fill={NAVY} />
                     <line x1={px - 17} y1={y + 27} x2={px + 17} y2={y + 27} stroke={NAVY} strokeWidth="2" />
                     {Array.from({ length: 5 }).map((_, i) => {
@@ -160,10 +199,31 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
                         />
                       )
                     })}
-                  </>
-                ) : (
-                  <circle cx={px} cy={y} r="7.5" fill="#ffffff" stroke={NAVY} strokeWidth="2.5" />
+                  </g>
                 )}
+
+                {/* Símbolo de Apoyo Móvil (Rodillo) */}
+                {support === 'roller' && (
+                  <g>
+                    <circle cx={px} cy={y + 12.5} r="7.5" fill="#ffffff" stroke={NAVY} strokeWidth="2.5" />
+                    <line x1={px - 15} y1={y + 20} x2={px + 15} y2={y + 20} stroke={NAVY} strokeWidth="2" />
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const hx = px - 12 + i * 6
+                      return (
+                        <line
+                          key={i}
+                          x1={hx}
+                          y1={y + 20}
+                          x2={hx - 4}
+                          y2={y + 27}
+                          stroke={NAVY_MUTED}
+                          strokeWidth="1.5"
+                        />
+                      )
+                    })}
+                  </g>
+                )}
+
                 <text x={px} y={y + 50} textAnchor="middle" fill={NAVY} fontSize="14" fontWeight="700">
                   N{node.label}
                 </text>
@@ -175,16 +235,33 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
 
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#5a6a7e]">
         <span className="flex items-center gap-2">
-          <svg width="16" height="12" aria-hidden>
-            <polygon points="8,0 0,11 16,11" fill={NAVY} />
+          <svg width="16" height="12" className="overflow-visible" aria-hidden>
+            <circle cx="8" cy="4" r="3.5" fill="#fff" stroke={NAVY} strokeWidth="1.5" />
+            <line x1="1" y1="9" x2="15" y2="9" stroke={NAVY} strokeWidth="1.5" />
           </svg>
-          Apoyo empotrado (θ = 0)
+          Apoyo móvil / Rodillo
+        </span>
+        <span className="flex items-center gap-2">
+          <svg width="16" height="12" className="overflow-visible" aria-hidden>
+            <polygon points="8,1 2,9 14,9" fill={NAVY} />
+            <line x1="0" y1="9" x2="16" y2="9" stroke={NAVY} strokeWidth="1.5" />
+          </svg>
+          Apoyo fijo / Articulado
+        </span>
+        <span className="flex items-center gap-2">
+          <svg width="16" height="12" className="overflow-visible" aria-hidden>
+            <line x1="5" y1="0" x2="5" y2="12" stroke={NAVY} strokeWidth="2" />
+            <line x1="5" y1="2" x2="1" y2="0" stroke={NAVY_MUTED} strokeWidth="1" />
+            <line x1="5" y1="6" x2="1" y2="4" stroke={NAVY_MUTED} strokeWidth="1" />
+            <line x1="5" y1="10" x2="1" y2="8" stroke={NAVY_MUTED} strokeWidth="1" />
+          </svg>
+          Empotramiento
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" aria-hidden>
-            <circle cx="8" cy="6" r="5" fill="#fff" stroke={NAVY} strokeWidth="2" />
+            <circle cx="8" cy="6" r="4" fill="#fff" stroke={NAVY} strokeWidth="1.5" />
           </svg>
-          Nodo libre (θ desconocida)
+          Nodo libre
         </span>
         <span>Escala aproximada: {scale} px = 1 {units.L}</span>
       </div>

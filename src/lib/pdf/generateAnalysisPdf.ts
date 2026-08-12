@@ -430,16 +430,25 @@ export function generateAnalysisPdf(
   sectionTitle(ctx, '1. DATOS DE ENTRADA')
 
   caption(ctx, 'Nodos')
+  const getSupportLabel = (node: any) => {
+    const type = node.supportType ?? (node.restrained ? 'fixed' : 'none')
+    switch (type) {
+      case 'fixed': return 'Empotrado (θ=0)'
+      case 'pinned': return 'Articulado'
+      case 'roller': return 'Rodillo'
+      default: return 'Libre'
+    }
+  }
   drawTable(
     ctx,
-    ['ID', 'Etiqueta', 'Apoyo (θ=0)', 'G.L.'],
+    ['ID', 'Etiqueta', 'Apoyo', 'G.L.'],
     model.nodes.map((node, index) => [
       String(node.id),
       node.label,
-      node.restrained ? 'Sí' : 'No',
+      getSupportLabel(node),
       result.dofLabels[index] ?? `θ${node.label}`,
     ]),
-    [20, 40, 50, CONTENT_W - 110],
+    [20, 40, 80, CONTENT_W - 140],
   )
 
   caption(ctx, 'Elementos')
