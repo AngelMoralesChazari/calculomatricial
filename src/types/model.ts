@@ -1,4 +1,4 @@
-export type SupportType = 'none' | 'roller' | 'pinned' | 'fixed'
+export type SupportType = 'none' | 'roller' | 'pinned' | 'fixed' | 'slider' | 'hinge' | 'spring'
 
 export interface StructNode {
   id: number

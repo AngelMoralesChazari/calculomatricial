@@ -433,9 +433,12 @@ export function generateAnalysisPdf(
   const getSupportLabel = (node: any) => {
     const type = node.supportType ?? (node.restrained ? 'fixed' : 'none')
     switch (type) {
-      case 'fixed': return 'Empotrado (θ=0)'
-      case 'pinned': return 'Articulado'
-      case 'roller': return 'Rodillo'
+      case 'fixed': return 'Empotramiento (θ=0)'
+      case 'pinned': return 'Apoyo fijo o articulado'
+      case 'roller': return 'Apoyo móvil o rodillo'
+      case 'slider': return 'Apoyo deslizante o guía (θ=0)'
+      case 'hinge': return 'Rótula interna'
+      case 'spring': return 'Apoyo elástico o resorte'
       default: return 'Libre'
     }
   }
