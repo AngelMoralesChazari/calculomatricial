@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { StructureModel, SupportType } from '../types/structure'
 import { units } from '../data/units'
 
@@ -15,9 +16,81 @@ const NAVY_MUTED = '#3d5a80'
 const MUTED = '#5a6a7e'
 
 export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }: BeamDiagramProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
   const margin = 56
   const positions = new Map<number, number>()
   let cursor = margin
+
+  const downloadSVG = () => {
+    const svgElement = svgRef.current
+    if (!svgElement) return
+
+    try {
+      const serializer = new XMLSerializer()
+      let source = serializer.serializeToString(svgElement)
+
+      // Add namespaces if missing
+      if (!source.match(/^<svg[^>]+xmlns="http:\/\/www.w3.org\/2000\/svg"/)) {
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"')
+      }
+      if (!source.match(/^<svg[^>]+xmlns:xlink="http:\/\/www.w3.org\/1999\/xlink"/)) {
+        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"')
+      }
+
+      source = '<?xml version="1.0" standalone="no"?>\r\n' + source
+
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source)
+      const downloadLink = document.createElement('a')
+      downloadLink.href = url
+      downloadLink.download = 'diagrama-viga.svg'
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+    } catch (err) {
+      console.error('Error al exportar SVG:', err)
+    }
+  }
+
+  const downloadPNG = () => {
+    const svgElement = svgRef.current
+    if (!svgElement) return
+
+    try {
+      const serializer = new XMLSerializer()
+      const source = serializer.serializeToString(svgElement)
+      const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' })
+      const URL = window.URL || window.webkitURL || window
+      const blobURL = URL.createObjectURL(svgBlob)
+
+      const image = new Image()
+      image.onload = () => {
+        const rect = svgElement.getBoundingClientRect()
+        const scaleVal = 2 // Render scale factor for HD image quality
+        const canvas = document.createElement('canvas')
+        canvas.width = rect.width * scaleVal
+        canvas.height = rect.height * scaleVal
+
+        const context = canvas.getContext('2d')
+        if (context) {
+          context.fillStyle = '#ffffff'
+          context.fillRect(0, 0, canvas.width, canvas.height)
+          context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+          const pngUrl = canvas.toDataURL('image/png')
+          const downloadLink = document.createElement('a')
+          downloadLink.href = pngUrl
+          downloadLink.download = 'diagrama-viga.png'
+          document.body.appendChild(downloadLink)
+          downloadLink.click()
+          document.body.removeChild(downloadLink)
+        }
+        URL.revokeObjectURL(blobURL)
+      }
+      image.src = blobURL
+    } catch (err) {
+      console.error('Error al exportar PNG:', err)
+    }
+  }
 
   for (const element of model.elements) {
     if (!positions.has(element.nodeI)) positions.set(element.nodeI, cursor)
@@ -48,21 +121,51 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
             Numeración de nodos, elementos y cargas · 1 G.L. rotacional (θ) por nodo
           </p>
         </div>
-        <div className="flex gap-2 text-[11px]">
-          <span className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] px-2.5 py-1 text-[#0a2540]">
-            {model.nodes.length} nodos
-          </span>
-          <span className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] px-2.5 py-1 text-[#0a2540]">
-            {model.elements.length} elementos
-          </span>
-          <span className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] px-2.5 py-1 text-[#0a2540]">
-            {restrainedCount} apoyos
-          </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1 text-[11px]">
+            <span className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] px-2 py-0.5 text-[#0a2540]">
+              {model.nodes.length} nodos
+            </span>
+            <span className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] px-2 py-0.5 text-[#0a2540]">
+              {model.elements.length} elementos
+            </span>
+            <span className="rounded-md border border-[#d0d7e2] bg-[#f4f6f9] px-2 py-0.5 text-[#0a2540]">
+              {restrainedCount} apoyos
+            </span>
+          </div>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={downloadPNG}
+              className="rounded-md border border-[#d0d7e2] bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#0a2540] hover:bg-[#f4f6f9] transition flex items-center gap-1"
+              title="Descargar en PNG (Alta Resolución)"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              PNG
+            </button>
+            <button
+              type="button"
+              onClick={downloadSVG}
+              className="rounded-md border border-[#d0d7e2] bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#0a2540] hover:bg-[#f4f6f9] transition flex items-center gap-1"
+              title="Descargar en SVG (Vectorial)"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              SVG
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="rounded-md border border-[#e2e8f0] bg-[#fbfcfe] px-2 py-3">
-        <svg viewBox={`0 0 ${maxX} ${viewHeight}`} className={`w-full ${heightClass}`} role="img">
+        <svg ref={svgRef} viewBox={`0 0 ${maxX} ${viewHeight}`} className={`w-full ${heightClass}`} role="img">
           {/* Nivel de referencia */}
           <line
             x1={margin - 24}
