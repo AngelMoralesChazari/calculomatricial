@@ -59,8 +59,7 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
       const serializer = new XMLSerializer()
       const source = serializer.serializeToString(svgElement)
       const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' })
-      const URL = window.URL || window.webkitURL || window
-      const blobURL = URL.createObjectURL(svgBlob)
+      const blobURL = window.URL.createObjectURL(svgBlob)
 
       const image = new Image()
       image.onload = () => {
@@ -84,7 +83,7 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
           downloadLink.click()
           document.body.removeChild(downloadLink)
         }
-        URL.revokeObjectURL(blobURL)
+        window.URL.revokeObjectURL(blobURL)
       }
       image.src = blobURL
     } catch (err) {
@@ -92,18 +91,44 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
     }
   }
 
-  for (const element of model.elements) {
-    if (!positions.has(element.nodeI)) positions.set(element.nodeI, cursor)
-    const start = positions.get(element.nodeI) ?? cursor
-    if (!positions.has(element.nodeJ)) positions.set(element.nodeJ, start + element.L * scale)
-    cursor = positions.get(element.nodeJ) ?? start
+  // Agrupar nodos en componentes conexas
+  const adj = new Map<number, { node: number; L: number }[]>()
+  for (const el of model.elements) {
+    if (!adj.has(el.nodeI)) adj.set(el.nodeI, [])
+    if (!adj.has(el.nodeJ)) adj.set(el.nodeJ, [])
+    adj.get(el.nodeI)!.push({ node: el.nodeJ, L: el.L })
+    adj.get(el.nodeJ)!.push({ node: el.nodeI, L: -el.L })
   }
 
-  // Nodos sin elementos asociados: se alinean al final para que sigan visibles
+  const visited = new Set<number>()
+  let currentStartX = margin
+
   for (const node of model.nodes) {
-    if (!positions.has(node.id)) {
-      cursor += scale
-      positions.set(node.id, cursor)
+    if (visited.has(node.id)) continue
+
+    // Inicio de una nueva componente conexa
+    if (positions.size > 0) {
+      const maxX = Math.max(...positions.values())
+      currentStartX = maxX + 1.5 * scale
+    }
+
+    // Algoritmo BFS para posicionar todos los nodos de esta componente
+    const queue: number[] = [node.id]
+    positions.set(node.id, currentStartX)
+    visited.add(node.id)
+
+    while (queue.length > 0) {
+      const curr = queue.shift()!
+      const currX = positions.get(curr)!
+
+      const neighbors = adj.get(curr) || []
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor.node)) {
+          positions.set(neighbor.node, currX + neighbor.L * scale)
+          visited.add(neighbor.node)
+          queue.push(neighbor.node)
+        }
+      }
     }
   }
 
@@ -205,7 +230,7 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
                     const top = y - 34 - offset
                     return (
                       <g key={load.id}>
-                        <line x1={x1} y1={top} x2={x2} y2={top} stroke={NAVY_MUTED} strokeWidth="2" />
+                        <line x1={x1 - 0.75} y1={top} x2={x2 + 0.75} y2={top} stroke={NAVY_MUTED} strokeWidth="2" strokeLinecap="butt" />
                         {Array.from({ length: 9 }).map((_, i) => {
                           const px = x1 + ((x2 - x1) * i) / 8
                           return (
