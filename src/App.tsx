@@ -88,6 +88,17 @@ function App() {
           </div>
         ) : result ? (
           <div className="space-y-6">
+            {/* Cabecera de Resultados con Botón de Descarga */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#d0d7e2] pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#0a2540]">Resultados del Análisis</h2>
+                <p className="mt-0.5 text-xs text-[#5a6a7e]">
+                  Viga resuelta mediante el método de rigidez matricial. 7 pasos de cálculo.
+                </p>
+              </div>
+              <DownloadReport model={model} result={result} />
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <SummaryCard
                 label="G.L. libres"
@@ -103,7 +114,6 @@ function App() {
               <SummaryCard label="Estado" value="✓" detail="Sistema resuelto" accent />
             </div>
             <BeamDiagram model={model} scale={42} heightClass="h-52" />
-            <DownloadReport model={model} result={result} />
             <AnalysisSteps result={result} model={model} />
           </div>
         ) : (
