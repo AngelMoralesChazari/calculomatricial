@@ -6,7 +6,7 @@ import { DownloadReport } from './components/DownloadReport'
 import { StructureInput } from './components/StructureInput'
 import { UnitsPanel } from './components/UnitsPanel'
 import { SummaryCard, TabButton } from './components/ui/Cards'
-import { continuousBeamExample, defaultStructure } from './data/examples'
+import { continuousBeamExample, defaultStructure, oneSpanExample } from './data/examples'
 import { analyzeStructure, validateStructure } from './lib/structuralAnalysis'
 import type { AnalysisResult, StructureModel } from './types/structure'
 
@@ -49,6 +49,10 @@ function App() {
   return (
     <div className="min-h-screen bg-[#f4f6f9] text-[#0a2540]">
       <AppHeader
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        hasResult={!!result}
+        onLoadOneSpan={() => loadExample(oneSpanExample)}
         onLoadDefault={() => loadExample(defaultStructure)}
         onLoadContinuous={() => loadExample(continuousBeamExample)}
         onCalculate={runAnalysis}
@@ -56,14 +60,6 @@ function App() {
       />
 
       <main className="mx-auto max-w-[96%] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex gap-1 rounded-lg border border-[#d0d7e2] bg-white p-1">
-          <TabButton active={activeTab === 'input'} onClick={() => setActiveTab('input')}>
-            Definir estructura
-          </TabButton>
-          <TabButton active={activeTab === 'results'} onClick={() => setActiveTab('results')} disabled={!result}>
-            Resultados (7 pasos)
-          </TabButton>
-        </div>
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
