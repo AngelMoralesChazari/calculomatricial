@@ -55,7 +55,7 @@ function App() {
         calculateDisabled={!!validationError}
       />
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-[96%] px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6 flex gap-1 rounded-lg border border-[#d0d7e2] bg-white p-1">
           <TabButton active={activeTab === 'input'} onClick={() => setActiveTab('input')}>
             Definir estructura
@@ -78,18 +78,16 @@ function App() {
         )}
 
         {activeTab === 'input' ? (
-          <div className="space-y-5">
-            <BeamDiagram model={model} />
+          <div className="grid gap-6 lg:grid-cols-12 items-start">
+            {/* Lado Izquierdo: Formularios de Edición */}
+            <div className="lg:col-span-5 order-2 lg:order-1 space-y-5">
+              <StructureInput model={model} onChange={setModel} />
+              <UnitsPanel />
+            </div>
 
-            <div className="grid gap-5 lg:grid-cols-12">
-              <div className="lg:col-span-9">
-                <StructureInput model={model} onChange={setModel} />
-              </div>
-              <aside className="lg:col-span-3">
-                <div className="lg:sticky lg:top-5">
-                  <UnitsPanel />
-                </div>
-              </aside>
+            {/* Lado Derecho: Diagrama de la Viga (Fijo al hacer scroll) */}
+            <div className="lg:col-span-7 order-1 lg:order-2 lg:sticky lg:top-5">
+              <BeamDiagram model={model} />
             </div>
           </div>
         ) : result ? (

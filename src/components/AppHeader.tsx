@@ -13,7 +13,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   return (
     <header className="border-b border-[#0a2540] bg-[#0a2540]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-[96%] flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-white/70">
             Ingeniería Civil · Análisis Estructural
