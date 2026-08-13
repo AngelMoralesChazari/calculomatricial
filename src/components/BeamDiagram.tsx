@@ -43,7 +43,7 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
     <section className="rounded-lg border border-[#d0d7e2] bg-white p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-[#0a2540] sm:text-xl">Idealización de la estructura</h2>
+          <h2 className="text-lg font-semibold text-[#0a2540] sm:text-xl">Diagrama de la Viga</h2>
           <p className="mt-0.5 text-xs text-[#5a6a7e]">
             Numeración de nodos, elementos y cargas · 1 G.L. rotacional (θ) por nodo
           </p>
@@ -291,14 +291,14 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
             <circle cx="10.5" cy="9.5" r="1" fill="#fff" stroke={NAVY} strokeWidth="0.8" />
             <line x1="1" y1="11" x2="15" y2="11" stroke={NAVY} strokeWidth="1" />
           </svg>
-          Apoyo móvil o rodillo
+          Apoyo móvil
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
             <polygon points="8,1 2,9 14,9" fill={NAVY} />
             <line x1="0" y1="9" x2="16" y2="9" stroke={NAVY} strokeWidth="1.5" />
           </svg>
-          Apoyo fijo o articulado
+          Apoyo articulado
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
@@ -316,20 +316,20 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
             <circle cx="11" cy="6.5" r="1.5" fill="#fff" stroke={NAVY} strokeWidth="1" />
             <line x1="0" y1="9" x2="16" y2="9" stroke={NAVY} strokeWidth="1.5" />
           </svg>
-          Apoyo deslizante o guía
+          Apoyo deslizante
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
             <circle cx="8" cy="6" r="4.5" fill="#fff" stroke={NAVY} strokeWidth="2" />
           </svg>
-          Rótula interna o articulación intermedia
+          Rótula interna
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" className="overflow-visible" aria-hidden>
             <path d="M 8,0 L 11,3 L 5,6 L 11,9 L 8,11" fill="none" stroke={NAVY} strokeWidth="1.5" />
             <line x1="2" y1="11" x2="14" y2="11" stroke={NAVY} strokeWidth="1.5" />
           </svg>
-          Apoyo elástico o resorte
+          Apoyo elástico
         </span>
         <span className="flex items-center gap-2">
           <svg width="16" height="12" aria-hidden>
