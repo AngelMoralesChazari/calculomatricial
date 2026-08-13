@@ -70,8 +70,6 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
 
   return (
     <div className="space-y-4">
-      {/* Fila compacta: nodos y momentos nodales */}
-      <div className="grid gap-4 lg:grid-cols-2">
         <section className={sectionClass}>
           <div className="mb-3 flex items-center justify-between">
             <h2 className={headingClass}>
@@ -107,12 +105,12 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
                   className="ml-auto min-w-0 flex-1 rounded border border-[#d0d7e2] bg-white px-1 py-0.5 text-[11px] text-[#0a2540] outline-none focus:border-[#0a2540]"
                 >
                   <option value="none">Libre (Conexión)</option>
-                  <option value="roller">Apoyo móvil o rodillo</option>
-                  <option value="pinned">Apoyo fijo o articulado</option>
+                  <option value="roller">Apoyo móvil</option>
+                  <option value="pinned">Apoyo articulado</option>
                   <option value="fixed">Empotramiento</option>
-                  <option value="slider">Apoyo deslizante o guía</option>
-                  <option value="hinge">Rótula interna o articulación intermedia</option>
-                  <option value="spring">Apoyo elástico o resorte</option>
+                  <option value="slider">Apoyo deslizante</option>
+                  <option value="hinge">Rótula interna</option>
+                  <option value="spring">Apoyo elástico</option>
                 </select>
                 {model.nodes.length > 2 && (
                   <button
@@ -178,7 +176,6 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
             })}
           </div>
         </section>
-      </div>
 
       <section className={sectionClass}>
         <div className="mb-3 flex items-center justify-between">
