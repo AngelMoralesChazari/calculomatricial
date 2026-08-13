@@ -434,11 +434,11 @@ export function generateAnalysisPdf(
     const type = node.supportType ?? (node.restrained ? 'fixed' : 'none')
     switch (type) {
       case 'fixed': return 'Empotramiento (θ=0)'
-      case 'pinned': return 'Apoyo fijo o articulado'
-      case 'roller': return 'Apoyo móvil o rodillo'
-      case 'slider': return 'Apoyo deslizante o guía (θ=0)'
+      case 'pinned': return 'Apoyo articulado'
+      case 'roller': return 'Apoyo móvil'
+      case 'slider': return 'Apoyo deslizante (θ=0)'
       case 'hinge': return 'Rótula interna'
-      case 'spring': return 'Apoyo elástico o resorte'
+      case 'spring': return 'Apoyo elástico'
       default: return 'Libre'
     }
   }
@@ -473,12 +473,12 @@ export function generateAnalysisPdf(
     model.elementLoads.length === 0
       ? [['—', '—', '—', '—', '—']]
       : model.elementLoads.map((load) => [
-          String(load.id),
-          `E${load.elementId}`,
-          load.type === 'udl' ? `w (${units.udl})` : `P (${units.point})`,
-          String(load.value),
-          load.type === 'point' ? String(load.position ?? '—') : '—',
-        ]),
+        String(load.id),
+        `E${load.elementId}`,
+        load.type === 'udl' ? `w (${units.udl})` : `P (${units.point})`,
+        String(load.value),
+        load.type === 'point' ? String(load.position ?? '—') : '—',
+      ]),
     [20, 26, 42, 40, CONTENT_W - 128],
   )
 
@@ -489,9 +489,9 @@ export function generateAnalysisPdf(
     model.nodalLoads.length === 0
       ? [['—', '0']]
       : model.nodalLoads.map((load) => {
-          const nodeLabel = model.nodes.find((n) => n.id === load.nodeId)?.label ?? String(load.nodeId)
-          return [`N${nodeLabel}`, formatNumber(load.moment)]
-        }),
+        const nodeLabel = model.nodes.find((n) => n.id === load.nodeId)?.label ?? String(load.nodeId)
+        return [`N${nodeLabel}`, formatNumber(load.moment)]
+      }),
     [60, CONTENT_W - 60],
   )
 

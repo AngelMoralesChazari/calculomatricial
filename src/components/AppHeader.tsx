@@ -15,13 +15,7 @@ export function AppHeader({
     <header className="border-b border-[#0a2540] bg-[#0a2540]">
       <div className="mx-auto flex max-w-[96%] flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/70">
-            Ingeniería Civil · Análisis Estructural
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">Calculo Matricial</h1>
-          <p className="mt-1 text-sm text-white/70">
-            Método de rigidez matricial para vigas
-          </p>
+          <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">VIGAMAT 2D</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <button

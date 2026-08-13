@@ -80,13 +80,13 @@ function App() {
         {activeTab === 'input' ? (
           <div className="grid gap-6 lg:grid-cols-12 items-start">
             {/* Lado Izquierdo: Formularios de Edición */}
-            <div className="lg:col-span-5 order-2 lg:order-1 space-y-5">
+            <div className="lg:col-span-4 order-2 lg:order-1 space-y-5">
               <StructureInput model={model} onChange={setModel} />
               <UnitsPanel />
             </div>
 
             {/* Lado Derecho: Diagrama de la Viga (Fijo al hacer scroll) */}
-            <div className="lg:col-span-7 order-1 lg:order-2 lg:sticky lg:top-5">
+            <div className="lg:col-span-8 order-1 lg:order-2 lg:sticky lg:top-5">
               <BeamDiagram model={model} />
             </div>
           </div>
