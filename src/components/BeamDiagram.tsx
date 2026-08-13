@@ -19,7 +19,6 @@ export function BeamDiagram({ model, scale = 55, heightClass = 'h-72 sm:h-80' }:
   const svgRef = useRef<SVGSVGElement>(null)
   const margin = 56
   const positions = new Map<number, number>()
-  let cursor = margin
 
   const downloadSVG = () => {
     const svgElement = svgRef.current
