@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { BeamElement, StructNode, StructureModel, SupportType } from '../types/structure'
 import { units } from '../data/units'
 import { ElementLoadRow } from './ElementLoadRow'
@@ -27,6 +28,20 @@ const addButtonClass =
   'rounded-md bg-[#0a2540] px-2.5 py-1 text-[11px] font-medium text-white hover:bg-[#1a3a5c]'
 
 export function StructureInput({ model, onChange }: StructureInputProps) {
+  const [openSections, setOpenSections] = useState({
+    nodes: true,
+    moments: true,
+    elements: true,
+    loads: true,
+  })
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }))
+  }
+
   const addNode = () => {
     const nextId = Math.max(0, ...model.nodes.map((n) => n.id)) + 1
     onChange({
@@ -71,15 +86,31 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
   return (
     <div className="space-y-4">
         <section className={sectionClass}>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className={headingClass}>
-              Nodos <span className="ml-1 font-normal text-[#5a6a7e]">({model.nodes.length})</span>
-            </h2>
-            <button type="button" onClick={addNode} className={addButtonClass}>
+          <div
+            onClick={() => toggleSection('nodes')}
+            className="flex cursor-pointer select-none items-center justify-between hover:opacity-80"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-[#5a6a7e] w-3 text-center">
+                {openSections.nodes ? '▼' : '▶'}
+              </span>
+              <h2 className={headingClass}>
+                Nodos <span className="ml-1 font-normal text-[#5a6a7e]">({model.nodes.length})</span>
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                addNode()
+              }}
+              className={addButtonClass}
+            >
               + Nodo
             </button>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          {openSections.nodes && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {model.nodes.map((node) => (
               <div
                 key={node.id}
@@ -142,13 +173,25 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
               </div>
             ))}
           </div>
+          )}
         </section>
 
         <section className={sectionClass}>
-          <h2 className={`${headingClass} mb-3`}>
-            Momentos nodales <span className="ml-1 font-normal text-[#5a6a7e]">({units.moment})</span>
-          </h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div
+            onClick={() => toggleSection('moments')}
+            className="flex cursor-pointer select-none items-center justify-between hover:opacity-80"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-[#5a6a7e] w-3 text-center">
+                {openSections.moments ? '▼' : '▶'}
+              </span>
+              <h2 className={headingClass}>
+                Momentos nodales <span className="ml-1 font-normal text-[#5a6a7e]">({units.moment})</span>
+              </h2>
+            </div>
+          </div>
+          {openSections.moments && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {model.nodes.map((node) => {
               const existing = model.nodalLoads.find((l) => l.nodeId === node.id)
               const moment = existing?.moment ?? 0
@@ -175,18 +218,35 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
               )
             })}
           </div>
+          )}
         </section>
 
       <section className={sectionClass}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className={headingClass}>
-            Elementos (vigas) <span className="ml-1 font-normal text-[#5a6a7e]">({model.elements.length})</span>
-          </h2>
-          <button type="button" onClick={addElement} className={addButtonClass}>
+        <div
+          onClick={() => toggleSection('elements')}
+          className="flex cursor-pointer select-none items-center justify-between hover:opacity-80"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[#5a6a7e] w-3 text-center">
+              {openSections.elements ? '▼' : '▶'}
+            </span>
+            <h2 className={headingClass}>
+              Elementos (vigas) <span className="ml-1 font-normal text-[#5a6a7e]">({model.elements.length})</span>
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              addElement()
+            }}
+            className={addButtonClass}
+          >
             + Elemento
           </button>
         </div>
-        <div className="space-y-2">
+        {openSections.elements && (
+          <div className="mt-3 space-y-2">
           {model.elements.map((element) => (
             <div
               key={element.id}
@@ -259,19 +319,36 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
             </div>
           ))}
         </div>
+        )}
       </section>
 
       <section className={sectionClass}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className={headingClass}>
-            Cargas en elementos{' '}
-            <span className="ml-1 font-normal text-[#5a6a7e]">({model.elementLoads.length})</span>
-          </h2>
-          <button type="button" onClick={addElementLoad} className={addButtonClass}>
+        <div
+          onClick={() => toggleSection('loads')}
+          className="flex cursor-pointer select-none items-center justify-between hover:opacity-80"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[#5a6a7e] w-3 text-center">
+              {openSections.loads ? '▼' : '▶'}
+            </span>
+            <h2 className={headingClass}>
+              Cargas en elementos{' '}
+              <span className="ml-1 font-normal text-[#5a6a7e]">({model.elementLoads.length})</span>
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              addElementLoad()
+            }}
+            className={addButtonClass}
+          >
             + Carga
           </button>
         </div>
-        <div className="space-y-2">
+        {openSections.loads && (
+          <div className="mt-3 space-y-2">
           {model.elementLoads.length === 0 && (
             <p className="text-sm text-[#5a6a7e]">Sin cargas en elementos.</p>
           )}
@@ -279,6 +356,7 @@ export function StructureInput({ model, onChange }: StructureInputProps) {
             <ElementLoadRow key={load.id} model={model} load={load} onChange={onChange} inputClass={inputClass} />
           ))}
         </div>
+        )}
       </section>
     </div>
   )
